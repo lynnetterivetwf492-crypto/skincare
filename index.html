@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>护肤打卡</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0f0f0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="护肤打卡">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0f0f0f;
+  color: #e8e8e8;
+  min-height: 100vh;
+  padding-bottom: 76px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+.header { padding: 20px 16px 10px; position: sticky; top: 0; background: #0f0f0f; z-index: 10; }
+.header h1 { font-size: 22px; font-weight: 700; color: #c8e6c9; display: flex; align-items: center; gap: 8px; }
+.date { font-size: 13px; color: #888; margin-top: 4px; }
+.day-badge { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.day-badge.rest { background: #2a2a2a; color: #999; }
+.day-badge.mild { background: #1a2e1a; color: #8bc34a; }
+.day-badge.active { background: #2e1a1a; color: #ff8a65; }
+.day-badge.exfol { background: #1a2e2a; color: #4dd0e1; }
+
+/* Nav row: arrows + month label */
+.date-nav { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 10px; }
+.date-nav .month-label { font-size: 13px; color: #aaa; min-width: 100px; text-align: center; }
+.date-nav button { background: none; border: none; color: #888; font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 8px; -webkit-tap-highlight-color: transparent; }
+.date-nav button:active { background: #1a1a24; }
+
+/* Week bar */
+.week-bar { display: flex; gap: 4px; margin-top: 8px; justify-content: space-between; }
+.week-btn { flex: 1; padding: 6px 0; border-radius: 12px; background: #1a1a24; border: 1.5px solid transparent; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; position: relative; transition: all 0.2s; }
+.week-btn .day-label { font-size: 11px; color: #888; }
+.week-btn .day-num { font-size: 14px; font-weight: 600; color: #ccc; margin-top: 2px; }
+.week-btn.active { border-color: #c8e6c9; background: #1a2a1a; }
+.week-btn.active .day-label, .week-btn.active .day-num { color: #c8e6c9; }
+.week-btn.today .day-num { color: #fff; }
+.week-btn.today::after { content: ''; position: absolute; top: 4px; right: 4px; width: 5px; height: 5px; border-radius: 50%; background: #c8e6c9; }
+.week-btn.has-record::before { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #66bb6a; }
+
+/* Progress */
+.progress-bar { height: 3px; background: #1a1a1a; border-radius: 2px; margin-top: 12px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #66bb6a, #a5d6a7); border-radius: 2px; transition: width 0.4s; width: 0; }
+
+/* Sections */
+.section { margin: 16px; padding: 14px; background: #161616; border-radius: 14px; border: 1px solid #222; }
+.section-title { font-size: 15px; font-weight: 600; color: #c8e6c9; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.section-title .icon { font-size: 16px; }
+.section-title .count { font-size: 12px; color: #666; margin-left: auto; }
+
+/* Check items */
+.check-item { display: flex; align-items: center; padding: 10px 8px; border-radius: 10px; margin-bottom: 4px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+.check-item:active { background: #1a1a24; }
+.check-item.done { opacity: 0.45; }
+.check-item.done .label { text-decoration: line-through; color: #666; }
+.checkbox { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #333; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 12px; }
+.check-item.done .checkbox { background: #4caf50; border-color: #4caf50; color: #fff; }
+.label { flex: 1; font-size: 14px; line-height: 1.4; }
+.note { font-size: 11px; color: #666; margin-top: 2px; }
+.tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-weight: 500; white-space: nowrap; }
+.tag.retinol { background: #2e1a2e; color: #ce93d8; }
+.tag.adapalene { background: #1a2e1a; color: #81c784; }
+.tag.bha { background: #1a2a2e; color: #4fc3f7; }
+.tag.bright { background: #2e2e1a; color: #fff176; }
+.tag.mask { background: #2e221a; color: #ffb74d; }
+.tag.azelaic { background: #2e1a1a; color: #ef9a9a; }
+
+/* Timer buttons */
+.timer-btn { background: #222; border: none; color: #aaa; padding: 5px 12px; border-radius: 14px; font-size: 12px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.2s; white-space: nowrap; margin-left: 8px; }
+.timer-btn.start { background: #2a2a4a; color: #6cb4ff; }
+.timer-btn.start:active { background: #3a3a5a; }
+.timer-btn.running { background: #1e3a5f; color: #6cb4ff; animation: pulse 1.5s infinite; }
+.timer-btn.done { background: #1e3a2f; color: #6cffaa; animation: none; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+/* Complete message */
+.complete-msg { text-align: center; margin-top: 28px; font-size: 14px; color: #4caf50; opacity: 0; transition: opacity 0.3s; }
+.complete-msg.show { opacity: 1; }
+
+/* Reset button */
+.reset-btn { display: block; margin: 20px auto 0; padding: 8px 20px; background: transparent; border: 1px solid #333; color: #666; border-radius: 20px; font-size: 13px; cursor: pointer; }
+.reset-btn:active { background: #1a1a24; }
+
+/* Bottom tabs */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #111;
+  border-top: 1px solid #222;
+  display: flex;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  z-index: 100;
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  padding: 4px 0;
+}
+.tab-item .tab-icon { font-size: 20px; }
+.tab-item.active { color: #c8e6c9; }
+
+/* Records tab */
+.records-wrap { padding: 16px; }
+.records-wrap h2 { font-size: 16px; color: #c8e6c9; margin-bottom: 12px; }
+.record-card {
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.record-card:active { background: #1a1a24; }
+.record-card .rc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.record-card .rc-date { font-size: 14px; font-weight: 600; color: #ddd; }
+.record-card .rc-pct { font-size: 13px; font-weight: 600; }
+.record-card .rc-pct.full { color: #4caf50; }
+.record-card .rc-pct.partial { color: #ffa726; }
+.record-card .rc-summary { font-size: 12px; color: #888; line-height: 1.5; }
+.record-card .rc-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.record-card .rc-tags .mini-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; background: #222; color: #999; }
+.record-empty { text-align: center; color: #555; padding: 40px 0; font-size: 14px; }
+.record-back { background: none; border: none; color: #c8e6c9; font-size: 14px; cursor: pointer; padding: 8px 0; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; -webkit-tap-highlight-color: transparent; }
+
+/* Restock tab */
+.restock-wrap { padding: 16px; }
+.restock-wrap h2 { font-size: 16px; color: #c8e6c9; margin-bottom: 12px; }
+.restock-item {
+  background: #161616;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s;
+}
+.restock-item.status-low { border-color: #ffa726; }
+.restock-item.status-out { border-color: #ef5350; }
+.restock-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.restock-name { font-size: 14px; font-weight: 600; color: #ddd; }
+.restock-status { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; border: none; }
+.restock-status.s-ok { background: #1a2e1a; color: #66bb6a; }
+.restock-status.s-low { background: #2e2a1a; color: #ffa726; }
+.restock-status.s-out { background: #2e1a1a; color: #ef5350; }
+.restock-hint { font-size: 11px; color: #555; }
+.restock-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; color: #777; }
+.restock-meta .usage-info { color: #888; }
+.restock-meta .opened-info { color: #888; }
+.restock-open-btn {
+  margin-top: 8px;
+  padding: 5px 14px;
+  border-radius: 12px;
+  border: 1px dashed #444;
+  background: transparent;
+  color: #9fa8da;
+  font-size: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  width: 100%;
+}
+.restock-open-btn:active { background: #1a1a2a; }
+.restock-history { margin-top: 6px; font-size: 11px; color: #666; }
+
+/* History view overlay */
+.history-banner {
+  background: #1a2a1a;
+  border: 1px solid #2e3e2e;
+  border-radius: 10px;
+  padding: 8px 14px;
+  margin: 8px 16px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #a5d6a7;
+}
+.history-banner button {
+  background: none;
+  border: none;
+  color: #c8e6c9;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Checkbox bounce animation */
+@keyframes checkBounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.35); }
+  50% { transform: scale(0.9); }
+  70% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.check-item.just-checked .checkbox { animation: checkBounce 0.4s ease; }
+
+/* Collapsible note */
+.note-toggle { font-size: 11px; color: #555; margin-top: 2px; cursor: pointer; display: flex; align-items: center; gap: 3px; }
+.note-toggle .arrow { transition: transform 0.2s; display: inline-block; font-size: 9px; }
+.note-toggle .arrow.open { transform: rotate(90deg); }
+.note-content { font-size: 11px; color: #666; margin-top: 2px; overflow: hidden; transition: max-height 0.25s ease, opacity 0.2s; max-height: 0; opacity: 0; }
+.note-content.expanded { max-height: 60px; opacity: 1; }
+
+/* Restock warning banner */
+.restock-banner {
+  background: linear-gradient(135deg, #2e1a1a, #2e2a1a);
+  border: 1px solid #3e2a2a;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 8px 16px 0;
+  font-size: 12px;
+  color: #ffa726;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.restock-banner:active { opacity: 0.8; }
+.restock-banner .banner-icon { font-size: 16px; flex-shrink: 0; }
+.restock-banner .banner-text { flex: 1; }
+
+/* Streak badge */
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #1a2a1a;
+  border: 1px solid #2e3e2e;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #a5d6a7;
+  margin-bottom: 12px;
+}
+.streak-badge .fire { font-size: 14px; }
+
+/* Data backup buttons */
+.backup-bar {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #222;
+}
+.backup-btn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #1a1a24;
+  color: #aaa;
+  font-size: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+}
+.backup-btn:active { background: #2a2a3a; }
+
+/* Notes tab */
+.notes-container { padding: 16px; }
+.notes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.notes-header h3 { font-size: 16px; color: #e0e0e0; margin: 0; }
+.notes-add-btn {
+  background: linear-gradient(135deg, #2e4a2e, #1e3a1e);
+  border: 1px solid #3e5e3e;
+  color: #a5d6a7;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.notes-add-btn:active { opacity: 0.7; }
+.notes-grid { display: flex; flex-direction: column; gap: 12px; }
+.note-card {
+  border-radius: 12px;
+  padding: 14px;
+  position: relative;
+  min-height: 60px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.note-card .note-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #1a1a1a;
+  white-space: pre-wrap;
+  word-break: break-word;
+  outline: none;
+  min-height: 24px;
+}
+.note-card .note-text:empty::before {
+  content: '写点什么…';
+  color: rgba(0,0,0,0.35);
+}
+.note-card .note-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 11px;
+  color: rgba(0,0,0,0.4);
+}
+.note-card .note-delete {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: rgba(0,0,0,0.3);
+  padding: 2px 6px;
+  border-radius: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+.note-card .note-delete:active { background: rgba(0,0,0,0.1); }
+.note-color-picker {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: center;
+}
+.note-color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.note-color-dot.selected { border-color: rgba(0,0,0,0.5); }
+.notes-empty {
+  text-align: center;
+  color: #555;
+  font-size: 13px;
+  padding: 40px 0;
+}
+
+/* === 优化新增 === */
+.detail-section { margin-top: 16px; font-size: 14px; color: #c8e6c9; margin-bottom: 8px; }
+.detail-row { display: flex; align-items: center; padding: 8px; border-radius: 8px; margin-bottom: 2px; }
+.detail-row.done { opacity: 0.5; }
+.detail-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #333; display: flex; align-items: center; justify-content: center; font-size: 11px; margin-right: 10px; flex-shrink: 0; }
+.detail-check.on { background: #4caf50; border-color: #4caf50; color: #fff; }
+.detail-name { font-size: 14px; }
+.detail-name.done { text-decoration: line-through; color: #666; }
+.toast-btn { margin-left: 12px; padding: 4px 12px; border-radius: 10px; border: 1px solid #4caf50; background: transparent; color: #a5d6a7; font-size: 13px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.check-item:focus-visible { outline: 2px solid #4caf50; outline-offset: 2px; }
+
+/* ================= 新增样式 ================= */
+/* 引导模式 */
+#guideView { position: fixed; inset: 0; background: #0f0f0f; z-index: 200; display: none; flex-direction: column; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); }
+#guideView.show { display: flex; }
+.guide-top { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: #888; }
+.guide-close { background: none; border: none; color: #888; font-size: 22px; cursor: pointer; padding: 4px 8px; -webkit-tap-highlight-color: transparent; }
+.guide-progress { height: 3px; background: #1e1e1e; border-radius: 2px; margin: 12px 0 10px; overflow: hidden; }
+.guide-progress > div { height: 100%; background: linear-gradient(90deg, #66bb6a, #a5d6a7); transition: width 0.3s; }
+.guide-card { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 14px; }
+.guide-step { font-size: 12px; color: #666; letter-spacing: 2px; }
+.guide-name { font-size: 30px; font-weight: 700; color: #e8e8e8; line-height: 1.3; }
+.guide-note { font-size: 14px; color: #888; max-width: 290px; line-height: 1.6; }
+.guide-tag { font-size: 11px; padding: 3px 10px; border-radius: 10px; background: #222; color: #aaa; }
+.guide-timer { width: 118px; height: 118px; border-radius: 50%; border: 3px solid #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 25px; font-weight: 700; color: #c8e6c9; cursor: pointer; margin: 6px 0; -webkit-tap-highlight-color: transparent; }
+.guide-timer.running { border-color: #4caf50; animation: pulse 1.4s infinite; }
+.guide-timer.done { border-color: #4caf50; background: #12251a; font-size: 20px; }
+.guide-actions { display: flex; gap: 10px; margin-top: 8px; }
+.guide-btn { padding: 15px 0; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.guide-btn.primary { flex: 1; background: linear-gradient(135deg, #4caf50, #388e3c); color: #fff; }
+.guide-btn.ghost { flex: 0 0 96px; background: #1a1a24; color: #aaa; }
+.guide-btn:active { opacity: 0.85; }
+
+/* 皮肤记录 */
+.skin-card { margin: 16px; padding: 14px; background: #161616; border: 1px solid #222; border-radius: 14px; }
+.skin-head { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #c8e6c9; margin-bottom: 10px; }
+.skin-score { display: flex; gap: 10px; }
+.skin-dot { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #2a2a2a; background: none; color: #777; font-size: 15px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.skin-dot.on { border-color: #66bb6a; background: #15301f; color: #a5d6a7; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { padding: 6px 12px; border-radius: 16px; border: 1px solid #2a2a2a; background: #141414; color: #888; font-size: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.chip.on { border-color: #4caf50; background: #15301f; color: #a5d6a7; }
+.skin-note { width: 100%; margin-top: 4px; background: #101010; border: 1px solid #242424; border-radius: 10px; color: #ddd; font-size: 13px; padding: 10px; resize: none; font-family: inherit; }
+
+/* 弹层 */
+.overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); z-index: 300; display: flex; align-items: flex-end; }
+.overlay .sheet { width: 100%; background: #151515; border-radius: 20px 20px 0 0; padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); max-height: 86vh; overflow: auto; }
+.sheet h3 { font-size: 16px; color: #e8e8e8; margin-bottom: 14px; }
+.sheet-label { font-size: 12px; color: #777; margin: 14px 0 8px; }
+.sheet-label:first-child { margin-top: 0; }
+
+/* 趋势条 */
+.spark { display: flex; align-items: flex-end; gap: 3px; height: 62px; margin-top: 10px; }
+.spark .bar { flex: 1; background: #2a4a35; border-radius: 2px 2px 0 0; min-height: 2px; }
+.spark .bar.hi { background: #4caf50; }
+.spark-legend { display: flex; justify-content: space-between; font-size: 10px; color: #555; margin-top: 6px; }
+
+/* 设置 */
+.settings { padding: 16px; }
+.settings h2 { font-size: 16px; color: #c8e6c9; margin-bottom: 12px; }
+.set-group { background: #161616; border: 1px solid #222; border-radius: 14px; padding: 6px 14px; margin-bottom: 12px; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid #1f1f1f; font-size: 14px; color: #ddd; }
+.set-row:last-child { border-bottom: none; }
+.sub { font-size: 11px; color: #666; margin-top: 2px; line-height: 1.4; }
+.set-btn { background: #1a1a24; border: 1px solid #2a2a2a; color: #aaa; border-radius: 10px; padding: 7px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+.set-btn:active { background: #23233a; }
+.set-btn.warn { color: #ef9a9a; border-color: #3a2222; }
+.seg { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px; }
+.seg button { flex: 0 0 auto; padding: 7px 14px; border-radius: 16px; border: 1px solid #2a2a2a; background: #141414; color: #888; font-size: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.seg button.on { background: #1a2a1a; border-color: #4caf50; color: #a5d6a7; }
+.step-edit { display: flex; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid #1f1f1f; }
+.step-edit input { background: #101010; border: 1px solid #242424; border-radius: 8px; color: #ddd; padding: 8px; font-size: 13px; font-family: inherit; }
+.step-edit input.name { flex: 1.15; min-width: 0; }
+.step-edit input.meta { flex: 1; min-width: 0; }
+.step-edit .del { background: none; border: none; color: #a55; font-size: 16px; cursor: pointer; padding: 4px 6px; }
+
+/* 浅色主题 */
+body.light { background: #f4f6f8; color: #1b1f24; }
+body.light .header { background: #f4f6f8; }
+body.light .header h1, body.light .section-title, body.light .records-wrap h2,
+body.light .restock-wrap h2, body.light .settings h2, body.light .skin-head,
+body.light .notes-header h3 { color: #1f7a3a; }
+body.light .tab-bar { background: #fff; border-top-color: #e3e7ec; }
+body.light .tab-item { color: #8a9199; }
+body.light .tab-item.active { color: #1f7a3a; }
+body.light .section, body.light .record-card, body.light .restock-item,
+body.light .set-group, body.light .skin-card, body.light .sheet { background: #fff; border-color: #e3e7ec; }
+body.light .check-item:active, body.light .record-card:active { background: #eef2f6; }
+body.light .label, body.light .set-row, body.light .restock-name, body.light .rc-date,
+body.light .guide-name, body.light .sheet h3 { color: #1b1f24; }
+body.light .note, body.light .date, body.light .guide-note, body.light .sub,
+body.light .restock-hint, body.light .note-content { color: #6b7480; }
+body.light .week-btn { background: #eaeef3; }
+body.light .week-btn .day-label { color: #8a9199; }
+body.light .week-btn .day-num { color: #2a3038; }
+body.light .checkbox { border-color: #c9d1da; }
+body.light .progress-bar { background: #e3e7ec; }
+body.light .date-nav button { color: #8a9199; }
+body.light #guideView { background: #f4f6f8; }
+body.light .guide-timer { border-color: #dde3ea; color: #1f7a3a; }
+body.light .guide-btn.ghost { background: #eaeef3; color: #5a636d; }
+body.light .skin-dot, body.light .chip { border-color: #dde3ea; background: #f4f6f8; color: #6b7480; }
+body.light .skin-note { background: #f4f6f8; border-color: #dde3ea; color: #1b1f24; }
+body.light .seg button { background: #eaeef3; border-color: #dde3ea; color: #6b7480; }
+body.light .set-btn { background: #eaeef3; border-color: #dde3ea; color: #5a636d; }
+body.light .spark .bar { background: #cfe3d6; }
+body.light .spark .bar.hi { background: #4caf50; }
+body.light .step-edit input { background: #f4f6f8; border-color: #dde3ea; color: #1b1f24; }
+body.light .overlay .sheet { background: #fff; }
+body.light .restock-status.s-ok { background: #e6f4ea; }
+body.light .history-banner { background: #e6f4ea; border-color: #c9e3d2; color: #1f7a3a; }
+body.light .toast-btn { color: #2e7d32; }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌿 护肤打卡</h1>
+  <div class="date" id="dateText"></div>
+  <div class="day-badge" id="dayBadge"></div>
+  <div class="date-nav">
+    <button onclick="shiftWeek(-1)" aria-label="上一周">‹</button>
+    <span class="month-label" id="monthLabel"></span>
+    <button onclick="shiftWeek(1)" aria-label="下一周">›</button>
+  </div>
+  <div class="week-bar" id="weekBar"></div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<div id="historyBanner"></div>
+<div id="content"></div>
+<div class="complete-msg" id="completeMsg">✨ 今天全部搞定！</div>
+<button class="reset-btn" id="resetBtn" onclick="resetToday()">重置今天</button>
+
+<!-- Bottom tab bar -->
+<div class="tab-bar">
+  <button class="tab-item active" data-tab="routine" onclick="switchTab('routine')">
+    <span class="tab-icon">📋</span>今日流程
+  </button>
+  <button class="tab-item" data-tab="records" onclick="switchTab('records')">
+    <span class="tab-icon">📊</span>打卡记录
+  </button>
+  <button class="tab-item" data-tab="restock" onclick="switchTab('restock')">
+    <span class="tab-icon">📦</span>补货提醒
+  </button>
+  <button class="tab-item" data-tab="notes" onclick="switchTab('notes')">
+    <span class="tab-icon">📝</span>便签
+  </button>
+  <button class="tab-item" data-tab="settings" onclick="switchTab('settings')">
+    <span class="tab-icon">⚙️</span>设置
+  </button>
+</div>
+
+<!-- 倒计时结束提示音 -->
+<audio id="timerAudio" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2LkZGDfXV2gIyWlo+GgHZ5g4mIiYqKh4J+fH6Bg4OEhYWGh4iJi4yLioiFgoCAfn18fXyBgIB+fXx9fH1+f4GCg4WEhIKAfn17fHx9fn9/goODhIWGhoB+fXt8fH1+f3+Cg4OEhYWGgH59e3x8fX5/f4KDg4SFhoaAf317fHx9fn9/goODhIWGhoB+fXt8fH1+f3+Cg4OEhYWGgH59e3x8fX5/f4KDg4SFhoaAf317fHx9fn9/goODhIWGhoB+fXt8fH1+f3+Cg4OEhYWGgH59e3x8fX5/f4KDg4SFhoaAf317fHx9fn9/goODhIWGhoB+fXt8fH1+f3+Cg4OEhYWGgH59e3x8fX5/f4KDg4SFhoaAf317fHx9fn9/goODhIWGhoB+fXt8fH1+f3+Cg4OFhYaAgH59e3x8fX5/f4KDg4SFhoaAf35/fn19fn9/goODhYWGhoB/fn9+fX1+f3+Cg4OFhYaGgH9+f359fX5/f4KDg4WFhoaAf35/fn19fn9/goODhYWGhoB/fn9+fX1+f3+Cg4OFhYaGgH9+f359fX5/f4KDg4WFhoaAf35/fn19fn9/goODhYWGhoB/fn9+fX1+f3+Cg4OFhYaGgH9+f359fX5/f4KDg4WFhoaAf35/fn19fn9/goODhYWGhoB/fn9+fX1+f3+Cg4OFhYaGgH9+f359fX5/f4KDg4WFhoaAf35/fn19fn9/goODhYWGhoB/fn9+fX1+f3+Cg4OFhYaGgH9+f359fX5/f4KDg4WFhoaAf35/fn19fn9/goODhYWGhoB/fn9+fX1+f3+Cg4OFhYaGgH9+f359fX5/f4KDg4WFhoaAf35/fn19fn9/goODhYWGhoB/fn9+fX1+f3+Cg4OFhYaGgH9+f359fX5/f4KDg4WFhoaAf35/fn19fn9/goODhYWGhoB/fn9+fX1+f3+Cg4OFhYaGgH9+f359fX5/f4KDg4WFhoaAf35/fn19fn9/goODhYWGhoB/fn9+fX1+f3+Cg4OFhYaGgH9+f359fX5/f4KDg4WFhoaAf35/fn19fn9/goOD" type="audio/wav">
+</audio>
+
+<script>
+/* ====== DATA ====== */
+const dayNames = ['周日','周一','周二','周三','周四','周五','周六'];
+const dayShort = ['日','一','二','三','四','五','六'];
+const dayTypes = {
+  0: { text: '休息日', class: 'rest' },
+  1: { text: 'A醇日', class: 'active' },
+  2: { text: '水杨酸日', class: 'exfol' },
+  3: { text: '休息日', class: 'rest' },
+  4: { text: 'A醇日', class: 'active' },
+  5: { text: '泥膜+A醇', class: 'mild' },
+  6: { text: '休息日', class: 'rest' }
+};
+
+const routines = {
+  morning: [
+    { name: '清水洗脸' },
+    { name: 'HBN发光水', note: '轻拍上脸' },
+    { name: '乐敦CC', note: '少挤，混油皮偏油' },
+    { name: '防晒', note: '欧莱雅小金管，必涂' }
+  ],
+  evening: {
+    0: [ // 周日 A醇+阿达帕林
+      { name: '洁面', note: '洗面奶' },
+      { name: '阿达帕林', note: '薄涂下巴闭口区，只涂下巴', tag: 'adapalene', tagText: '下巴' },
+      { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
+      { name: '修丽可色修', note: '舒缓打底' },
+      { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: '蓝管A醇', note: '全脸涂，等脸干再涂', tag: 'retinol', tagText: 'A醇' },
+      { name: 'B5修复霜', note: '薄涂一层' }
+    ],
+    1: [ // 周一 A醇+阿达帕林
+      { name: '洁面', note: '洗面奶' },
+      { name: '阿达帕林', note: '薄涂下巴闭口区，只涂下巴', tag: 'adapalene', tagText: '下巴' },
+      { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
+      { name: '修丽可色修', note: '舒缓打底' },
+      { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: '蓝管A醇', note: '全脸涂，等脸干再涂', tag: 'retinol', tagText: 'A醇' },
+      { name: 'B5修复霜', note: '薄涂一层' }
+    ],
+    2: [ // 周二 水杨酸
+      { name: '洁面', note: '洗面奶' },
+      { name: '水杨酸棉片', note: 'Stridex绿罐，擦T区+敷鼻头30s-1min，别碰下巴', tag: 'bha', tagText: 'T区' },
+      { name: '等待吸收', note: '水杨酸吸收后再涂下一步', timer: 90, timerLabel: '90s' },
+      { name: '修丽可色修', note: '舒缓打底' },
+      { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: 'B5修复霜', note: '薄涂一层' }
+    ],
+    3: [ // 周三 休息
+      { name: '洁面', note: '洗面奶' },
+      { name: '修丽可色修', note: '舒缓打底' },
+      { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: 'B5修复霜', note: '薄涂一层' }
+    ],
+    4: [ // 周四 A醇+阿达帕林
+      { name: '洁面', note: '洗面奶' },
+      { name: '阿达帕林', note: '薄涂下巴闭口区，只涂下巴', tag: 'adapalene', tagText: '下巴' },
+      { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
+      { name: '修丽可色修', note: '舒缓打底' },
+      { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: '蓝管A醇', note: '全脸涂，等脸干再涂', tag: 'retinol', tagText: 'A醇' },
+      { name: 'B5修复霜', note: '薄涂一层' }
+    ],
+    5: [ // 周五 泥膜+A醇
+      { name: '洁面', note: '洗面奶' },
+      { name: '泥膜敷T区', note: '只敷T区，别碰两颊', timer: 420, timerLabel: '7min', tag: 'mask', tagText: 'T区' },
+      { name: '洗掉泥膜', note: '温水洗干净' },
+      { name: '修丽可色修', note: '舒缓打底' },
+      { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: '蓝管A醇', note: '全脸涂，等脸干再涂', tag: 'retinol', tagText: 'A醇' },
+      { name: 'B5修复霜', note: '薄涂一层' }
+    ],
+    6: [ // 周六 休息
+      { name: '洁面', note: '洗面奶' },
+      { name: '修丽可色修', note: '舒缓打底' },
+      { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: 'B5修复霜', note: '薄涂一层' }
+    ]
+  }
+};
+
+/* ====== STATE ====== */
+let selectedDate = todayStr();
+let weekStart = getMonday(new Date());
+let activeTab = 'routine';
+let activeTimers = {};
+let viewingRecordDate = null;
+let lastDayKey = todayStr();
+const APP_KEY_RE = /^(\d{4}-\d{2}-\d{2}(_timer)?|restock_data|skincare_notes)$/;
+
+/* ====== 日期工具 ====== */
+function todayStr() {
+  return dateStr(new Date());
+}
+function dateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function getMonday(d) {
+  const m = new Date(d);
+  const day = m.getDay();
+  m.setDate(m.getDate() - day + (day === 0 ? -6 : 1));
+  m.setHours(0, 0, 0, 0);
+  return m;
+}
+function parseDate(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function formatDateCN(s) {
+  const d = parseDate(s);
+  return `${d.getMonth() + 1}月${d.getDate()}日 ${dayNames[d.getDay()]}`;
+}
+function daysSince(dateString) {
+  if (!dateString) return null;
+  const start = parseDate(dateString);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const diff = Math.floor((now - start) / 86400000);
+  return diff >= 0 ? diff : null;
+}
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* ====== 存储层（带内存缓存，避免重复 JSON.parse） ====== */
+const _dayCache = new Map();
+const _timerCache = new Map();
+
+function _readJson(key) {
+  try { return JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) { return {}; }
+}
+function readDay(key) {
+  if (!_dayCache.has(key)) _dayCache.set(key, _readJson(key));
+  return _dayCache.get(key);
+}
+function writeDay(key, obj) {
+  _dayCache.set(key, obj);
+  try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {}
+}
+function getCheckState(key, id) {
+  return !!readDay(key)[id];
+}
+function setCheckState(key, id, val) {
+  const d = Object.assign({}, readDay(key));
+  d[id] = val;
+  writeDay(key, d);
+}
+function readTimers(key) {
+  const k = key + '_timer';
+  if (!_timerCache.has(k)) _timerCache.set(k, _readJson(k));
+  return _timerCache.get(k);
+}
+function getTimerEntry(key, id) {
+  return readTimers(key)[id];
+}
+// 计时器状态：'idle' | 'running' | 'done'
+// 持久化格式 { state, endAt }，刷新/切后台后可凭时间戳恢复
+function getTimerState(key, id) {
+  const e = getTimerEntry(key, id);
+  if (!e) return 'idle';
+  if (e === 'done') return 'done';
+  if (e === 'running') return 'idle'; // 旧版遗留：没有结束时间，视为未开始，避免卡死
+  if (e.state === 'running') return e.endAt > Date.now() ? 'running' : 'done';
+  if (e.state === 'done') return 'done';
+  return 'idle';
+}
+function setTimerEntry(key, id, entry) {
+  const k = key + '_timer';
+  const d = Object.assign({}, readTimers(key));
+  d[id] = entry;
+  _timerCache.set(k, d);
+  try { localStorage.setItem(k, JSON.stringify(d)); } catch (e) {}
+}
+function getViewKey() { return selectedDate; }
+
+/* ====== 补货映射与默认数据 ====== */
+// 步骤名 → 补货产品名 映射
+const STEP_TO_PRODUCT = {
+  '清水洗脸': '至本洁面',
+  '洁面': '至本洁面',
+  'HBN发光水': 'HBN发光水',
+  '乐敦CC': '乐敦CC',
+  '防晒': '欧莱雅防晒',
+  '修丽可色修': '修丽可色修',
+  'OLAY小白瓶': 'OLAY小白瓶',
+  '蓝管A醇': '蓝管A醇',
+  'B5修复霜': 'B5修复霜',
+  '阿达帕林': '阿达帕林',
+  '水杨酸棉片': 'Stridex棉片',
+  '泥膜敷T区': '红之植酸泥膜'
+};
+
+const DEFAULT_RESTOCK = [
+  { name: '至本洁面', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: 'HBN发光水', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: '乐敦CC', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: '欧莱雅防晒', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: '修丽可色修', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: 'OLAY小白瓶', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: '蓝管A醇', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: 'B5修复霜', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: '阿达帕林', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: 'Stridex棉片', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: '红之植酸泥膜', status: 'ok', usageCount: 0, usageHistory: [] }
+];
+
+/* ====== 补货数据 ====== */
+function getRestockData() {
+  const saved = localStorage.getItem('restock_data');
+  if (saved) {
+    let parsed;
+    try { parsed = JSON.parse(saved); } catch (e) { parsed = null; }
+    if (!Array.isArray(parsed)) {
+      localStorage.setItem('restock_data', JSON.stringify(DEFAULT_RESTOCK));
+      return DEFAULT_RESTOCK.map(o => Object.assign({}, o));
+    }
+    // 只在真的缺少字段时才迁移；不能因为存在 openedDate 就重置用量
+    let needSave = false;
+    const migrated = parsed.map(item => {
+      const obj = Object.assign({}, item);
+      if (obj.usageCount === undefined) { obj.usageCount = 0; needSave = true; }
+      if (!Array.isArray(obj.usageHistory)) { obj.usageHistory = []; needSave = true; }
+      if (!obj.status) { obj.status = 'ok'; needSave = true; }
+      if (obj.name === '泥膜') { obj.name = '红之植酸泥膜'; needSave = true; }
+      return obj;
+    });
+    if (needSave) localStorage.setItem('restock_data', JSON.stringify(migrated));
+    return migrated;
+  }
+  localStorage.setItem('restock_data', JSON.stringify(DEFAULT_RESTOCK));
+  return DEFAULT_RESTOCK.map(o => Object.assign({}, o));
+}
+function saveRestockData(data) {
+  localStorage.setItem('restock_data', JSON.stringify(data));
+}
+function avgUsage(history) {
+  if (!Array.isArray(history) || history.length === 0) return null;
+  return Math.round(history.reduce((a, b) => a + b, 0) / history.length);
+}
+
+// 打卡时自动累计产品使用次数
+function autoTrackUsage(stepName) {
+  const productName = STEP_TO_PRODUCT[stepName];
+  if (!productName) return;
+  const data = getRestockData();
+  const item = data.find(d => d.name === productName);
+  if (!item) return;
+  item.usageCount = (item.usageCount || 0) + 1;
+  if (!item.openedDate) item.openedDate = todayStr();
+  saveRestockData(data);
+}
+function autoUntrackUsage(stepName) {
+  const productName = STEP_TO_PRODUCT[stepName];
+  if (!productName) return;
+  const data = getRestockData();
+  const item = data.find(d => d.name === productName);
+  if (!item) return;
+  item.usageCount = Math.max(0, (item.usageCount || 0) - 1);
+  saveRestockData(data);
+}
+
+/* ====== 当前日期的流程项 ====== */
+function itemsOf(dateKey) {
+  const cfg = getRoutine();
+  const dow = parseDate(dateKey).getDay();
+  const evening = cfg.evening[dow] || [];
+  const list = [];
+  cfg.morning.forEach((item, i) => list.push({ id: 'm_' + i, item }));
+  evening.forEach((item, i) => list.push({ id: 'e_' + i, item }));
+  return list;
+}
+function findItem(dateKey, id) {
+  return itemsOf(dateKey).find(x => x.id === id) || null;
+}
+
+/* ====== TAB ====== */
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-item').forEach(el => {
+    const on = el.dataset.tab === tab;
+    el.classList.toggle('active', on);
+    el.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  const header = document.querySelector('.header');
+  const contentEl = document.getElementById('content');
+  const completeMsg = document.getElementById('completeMsg');
+  const resetBtn = document.getElementById('resetBtn');
+  const histBanner = document.getElementById('historyBanner');
+
+  header.style.display = tab === 'routine' ? '' : 'none';
+  histBanner.innerHTML = '';
+  resetBtn.style.display = tab === 'routine' ? '' : 'none';
+  if (tab !== 'routine') completeMsg.classList.remove('show');
+
+  if (tab === 'routine') { contentEl.innerHTML = ''; renderRoutine(); }
+  else if (tab === 'records') renderRecords();
+  else if (tab === 'restock') renderRestock();
+  else if (tab === 'notes') renderNotes();
+  else if (tab === 'settings') renderSettings();
+  window.scrollTo(0, 0);
+}
+
+/* ====== 记录页 ====== */
+function recordDates() {
+  const dates = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && /^\d{4}-\d{2}-\d{2}$/.test(key)) dates.push(key);
+  }
+  return dates.sort((a, b) => b.localeCompare(a));
+}
+function dayProgress(dateKey) {
+  const data = readDay(dateKey);
+  const list = itemsOf(dateKey);
+  let done = 0, m = 0, e = 0;
+  const tags = new Set();
+  list.forEach(({ id, item }) => {
+    if (data[id]) { done++; if (id[0] === 'm') m++; else e++; }
+    if (item.tag && item.tagText) tags.add(item.tagText);
+  });
+  return { done, total: list.length, morning: m, evening: e, tags: [...tags] };
+}
+
+function renderRecords() {
+  const content = document.getElementById('content');
+  if (viewingRecordDate) { renderRecordDetail(viewingRecordDate); return; }
+
+  const dates = recordDates();
+  let html = trendBlockHtml() + '<div class="records-wrap"><h2>📊 打卡记录</h2>';
+  if (dates.length === 0) {
+    html += '<div class="record-empty">还没有打卡记录<br>开始今天的护肤吧！</div>';
+  } else {
+    dates.forEach(dateKey => {
+      const p = dayProgress(dateKey);
+      const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+      const eveningLen = (routines.evening[parseDate(dateKey).getDay()] || []).length;
+      html += `<div class="record-card" onclick="viewRecordDetail('${dateKey}')">
+        <div class="rc-header">
+          <span class="rc-date">${formatDateCN(dateKey)}</span>
+          <span class="rc-pct ${pct === 100 ? 'full' : 'partial'}">${p.done}/${p.total} (${pct}%)</span>
+        </div>
+        <div class="rc-summary">早间${p.morning}/${routines.morning.length} · 晚间${p.evening}/${eveningLen}</div>
+        <div class="rc-tags">${p.tags.map(t => `<span class="mini-tag">${escapeHtml(t)}</span>`).join('')}</div>
+      </div>`;
+    });
+  }
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function viewRecordDetail(dateKey) {
+  viewingRecordDate = dateKey;
+  renderRecordDetail(dateKey);
+}
+
+function renderRecordDetail(dateKey) {
+  const content = document.getElementById('content');
+  const dow = parseDate(dateKey).getDay();
+  const data = readDay(dateKey);
+  const badge = dayTypes[dow] || { text: '', class: 'rest' };
+  const list = itemsOf(dateKey);
+
+  let html = `<div class="records-wrap">
+    <button class="record-back" onclick="viewingRecordDate=null;renderRecords()">‹ 返回列表</button>
+    <h2>${formatDateCN(dateKey)} · <span class="day-badge ${badge.class}" style="font-size:11px;padding:2px 8px;">${escapeHtml(badge.text)}</span></h2>`;
+
+  const section = (title, ids, icon) => {
+    let s = `<div class="detail-section">${icon} ${title}</div>`;
+    ids.forEach(({ id, item }) => {
+      const done = !!data[id];
+      s += `<div class="detail-row${done ? ' done' : ''}">
+        <span class="detail-check${done ? ' on' : ''}">${done ? '✓' : ''}</span>
+        <span class="detail-name${done ? ' done' : ''}">${escapeHtml(item.name)}</span>
+        ${item.tag ? `<span class="tag ${item.tag}" style="margin-left:8px;">${escapeHtml(item.tagText)}</span>` : ''}
+      </div>`;
+    });
+    return s;
+  };
+  html += section('早间护肤', list.filter(x => x.id[0] === 'm'), '☀️');
+  html += section('晚间护肤', list.filter(x => x.id[0] === 'e'), '🌙');
+
+  const p = dayProgress(dateKey);
+  const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+  html += `<div style="text-align:center;margin-top:24px;font-size:14px;color:${pct === 100 ? '#4caf50' : '#ffa726'}">${pct === 100 ? '✨ 全部完成！' : `完成 ${p.done}/${p.total} (${pct}%)`}</div>`;
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+/* ====== 补货页 ====== */
+const STATUS_CYCLE = ['ok', 'low', 'out'];
+const STATUS_LABEL = { ok: '充足', low: '快用完了', out: '已用完' };
+const STATUS_CLASS = { ok: 's-ok', low: 's-low', out: 's-out' };
+const STATUS_ITEM_CLASS = { ok: '', low: 'status-low', out: 'status-out' };
+const STATUS_HINT = { ok: '点击切换状态 →', low: '快没了？再点一下 →', out: '补货后点一下重置 →' };
+const STATUS_ORDER = { out: 0, low: 1, ok: 2 };
+
+function renderRestock() {
+  const content = document.getElementById('content');
+  // 用副本排序，避免原地改动导致按钮索引错位
+  const data = getRestockData().slice().sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
+
+  let html = '<div class="restock-wrap"><h2>📦 补货提醒</h2>';
+  data.forEach(item => {
+    const used = daysSince(item.openedDate);
+    const avg = avgUsage(item.usageHistory);
+    const safeName = escapeHtml(item.name);
+
+    let meta = '<div class="restock-meta">';
+    meta += item.openedDate && used !== null
+      ? `<span class="opened-info">📅 已用 ${used} 天（${escapeHtml(item.openedDate)} 开封）</span>`
+      : '<span class="opened-info">尚未记录开封日期</span>';
+    meta += `<span class="usage-info">🧴 已用 ${item.usageCount || 0} 次</span>`;
+    if (avg !== null) meta += `<span class="usage-info">📊 平均 ${avg} 次/瓶</span>`;
+    const leftDays = estimateDaysLeft(item);
+    if (leftDays !== null) {
+      meta += `<span class="usage-info">${leftDays <= 7 ? '⏳' : '📅'} 约还能用 ${leftDays} 天</span>`;
+    }
+    meta += '</div>';
+
+    const history = Array.isArray(item.usageHistory) && item.usageHistory.length
+      ? `<div class="restock-history">历史每瓶用量：${item.usageHistory.map(c => c + '次').join('、')}</div>`
+      : '';
+
+    const openBtn = item.status === 'ok' && !item.openedDate
+      ? `<button class="restock-open-btn" data-open="${safeName}">📦 开新的（记录开封日期）</button>`
+      : '';
+
+    html += `<div class="restock-item ${STATUS_ITEM_CLASS[item.status] || ''}">
+      <div class="restock-top">
+        <span class="restock-name">${safeName}</span>
+        <button class="restock-status ${STATUS_CLASS[item.status] || 's-ok'}" data-status="${safeName}">${STATUS_LABEL[item.status] || '充足'}</button>
+      </div>
+      <div class="restock-hint">${STATUS_HINT[item.status] || ''}</div>
+      ${meta}${history}${openBtn}
+    </div>`;
+  });
+  html += '</div>';
+  html += `<div class="backup-bar">
+    <button class="backup-btn" onclick="exportData()">📤 导出数据</button>
+    <button class="backup-btn" onclick="importData()">📥 导入数据</button>
+  </div>`;
+  content.innerHTML = html;
+}
+
+// 事件委托：补货按钮（按名字定位，不依赖下标）
+document.addEventListener('click', e => {
+  const statusBtn = e.target.closest('[data-status]');
+  if (statusBtn) { cycleRestockStatus(statusBtn.dataset.status); return; }
+  const openBtn = e.target.closest('[data-open]');
+  if (openBtn) { openNewProduct(openBtn.dataset.open); return; }
+});
+
+function cycleRestockStatus(name) {
+  const data = getRestockData();
+  const idx = data.findIndex(d => d.name === name);
+  if (idx < 0) return;
+  const item = data[idx];
+
+  const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(item.status) + 1) % STATUS_CYCLE.length];
+  item.status = next;
+
+  if (next === 'out') {
+    const count = item.usageCount || 0;
+    if (count > 0) {
+      if (!Array.isArray(item.usageHistory)) item.usageHistory = [];
+      item.usageHistory.push(count);
+      item.usageCount = 0;
+      saveRestockData(data);
+      showToast(`${item.name} 用了 ${count} 次，已记录！`);
+      renderRestock();
+      return;
+    }
+    if (!item.openedDate) item.openedDate = todayStr();
+  }
+  if (next === 'ok') {
+    item.openedDate = null;
+    item.usageCount = 0;
+  }
+  if ((next === 'low' || next === 'out') && !item.openedDate) {
+    item.openedDate = todayStr();
+  }
+  saveRestockData(data);
+  renderRestock();
+  showToast(`${item.name} → ${STATUS_LABEL[next]}`);
+}
+
+function openNewProduct(name) {
+  const data = getRestockData();
+  const item = data.find(d => d.name === name);
+  if (!item) return;
+  item.openedDate = todayStr();
+  item.usageCount = 0;
+  saveRestockData(data);
+  renderRestock();
+  showToast(`已记录 ${item.name} 今天开封！`);
+}
+
+/* ====== 今日流程页 ====== */
+function renderRoutine() {
+  const content = document.getElementById('content');
+  stopAllTimers();
+
+  const today = todayStr();
+  const isToday = selectedDate === today;
+  const cfg = getRoutine();
+  const dow = parseDate(selectedDate).getDay();
+  const evening = cfg.evening[dow] || [];
+  const data = readDay(selectedDate);
+
+  document.getElementById('dateText').textContent = formatDateCN(selectedDate);
+  const badge = dayTypes[dow] || { text: '', class: 'rest' };
+  const badgeEl = document.getElementById('dayBadge');
+  badgeEl.textContent = badge.text;
+  badgeEl.className = 'day-badge ' + badge.class;
+
+  renderWeekBar();
+
+  const ws = weekStart;
+  const we = new Date(ws.getTime());
+  we.setDate(ws.getDate() + 6);
+  document.getElementById('monthLabel').textContent = ws.getMonth() === we.getMonth()
+    ? `${ws.getFullYear()}年${ws.getMonth() + 1}月`
+    : `${ws.getMonth() + 1}月 - ${we.getMonth() + 1}月`;
+
+  const histBanner = document.getElementById('historyBanner');
+  const resetBtn = document.getElementById('resetBtn');
+  if (!isToday) {
+    histBanner.innerHTML = `<div class="history-banner">
+      <span>📅 查看 ${formatDateCN(selectedDate)}</span>
+      <button onclick="goToday()">回到今天</button>
+    </div>`;
+    resetBtn.style.display = 'none';
+  } else {
+    histBanner.innerHTML = '';
+    resetBtn.style.display = '';
+  }
+
+  let html = '';
+
+  if (isToday) {
+    const lowItems = getRestockData().filter(d => d.status === 'low' || d.status === 'out');
+    if (lowItems.length) {
+      const icon = lowItems.some(d => d.status === 'out') ? '🚨' : '⚠️';
+      html += `<div class="restock-banner" onclick="switchTab('restock')">
+        <span class="banner-icon">${icon}</span>
+        <span class="banner-text">${escapeHtml(lowItems.map(d => d.name).join('、'))} 需要补货</span>
+        <span style="color:#888;font-size:11px;">查看 ›</span>
+      </div>`;
+    }
+  }
+
+  const streak = calcStreak();
+  if (streak > 0) {
+    html += `<div style="text-align:center;"><span class="streak-badge"><span class="fire">🔥</span> 已连续打卡 ${streak} 天</span></div>`;
+  }
+
+  if (isToday) {
+    html += `<div style="display:flex;gap:8px;margin:12px 16px 0;">
+      <button class="set-btn" style="flex:1;padding:12px 0;font-size:14px;" onclick="startGuide('morning')">☀️ 开始早间引导</button>
+      <button class="set-btn" style="flex:1;padding:12px 0;font-size:14px;" onclick="startGuide('evening')">🌙 开始晚间引导</button>
+    </div>`;
+  }
+
+  html += '<div class="section">';
+  html += '<div class="section-title"><span class="icon">☀️</span> 早间护肤 <span class="count" id="morningCount"></span></div>';
+  cfg.morning.forEach((item, i) => { html += renderItem('m_' + i, item, !!data['m_' + i], !isToday); });
+  html += '</div>';
+
+  html += '<div class="section">';
+  html += '<div class="section-title"><span class="icon">🌙</span> 晚间护肤 <span class="count" id="eveningCount"></span></div>';
+  evening.forEach((item, i) => { html += renderItem('e_' + i, item, !!data['e_' + i], !isToday); });
+  html += '</div>';
+
+  html += skinSummaryHtml();
+  content.innerHTML = html;
+  updateProgress();
+
+  // 恢复仍在运行的计时器（刷新 / 切后台回来）
+  if (isToday) {
+    itemsOf(selectedDate).forEach(({ id, item }) => {
+      if (item.timer && getTimerState(selectedDate, id) === 'running') {
+        const entry = getTimerEntry(selectedDate, id);
+        if (entry && entry.endAt) runTimer(id, entry.endAt);
+      }
+    });
+  }
+}
+
+function renderItem(id, item, checked, readOnly) {
+  const tagHtml = item.tag ? `<span class="tag ${item.tag}">${escapeHtml(item.tagText)}</span>` : '';
+
+  let timerHtml = '';
+  if (item.timer) {
+    if (readOnly) {
+      timerHtml = '<button class="timer-btn start" disabled style="opacity:0.7;cursor:default;">未到时间</button>';
+    } else {
+      const state = getTimerState(selectedDate, id);
+      const entry = getTimerEntry(selectedDate, id);
+      let cls = 'start', text = item.timerLabel || '开始';
+      if (state === 'done') { cls = 'done'; text = '✓ 好了'; }
+      else if (state === 'running') {
+        cls = 'running';
+        text = formatTime(Math.max(1, Math.ceil((entry.endAt - Date.now()) / 1000)));
+      }
+      timerHtml = `<button class="timer-btn ${cls}" data-timer-id="${id}" data-total-sec="${item.timer}">${text}</button>`;
+    }
+  }
+
+  const noteHtml = item.note
+    ? `<div class="note-toggle"><span class="arrow">▶</span> 说明</div><div class="note-content">${escapeHtml(item.note)}</div>`
+    : '';
+
+  return `<div class="check-item${checked ? ' done' : ''}" data-id="${id}" role="checkbox" aria-checked="${checked}" tabindex="0"${readOnly ? ' style="pointer-events:none"' : ''}>
+    <div class="checkbox">${checked ? '✓' : ''}</div>
+    <div class="label">${escapeHtml(item.name)}${noteHtml}</div>
+    ${tagHtml}${timerHtml}
+  </div>`;
+}
+
+function updateProgress() {
+  const cfg = getRoutine();
+  const dow = parseDate(selectedDate).getDay();
+  const evening = cfg.evening[dow] || [];
+  const total = cfg.morning.length + evening.length;
+  const done = document.querySelectorAll('.check-item.done').length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  const mDone = document.querySelectorAll('.check-item.done[data-id^="m_"]').length;
+  const eDone = document.querySelectorAll('.check-item.done[data-id^="e_"]').length;
+  const mc = document.getElementById('morningCount');
+  const ec = document.getElementById('eveningCount');
+  if (mc) mc.textContent = `${mDone}/${cfg.morning.length}`;
+  if (ec) ec.textContent = `${eDone}/${evening.length}`;
+  document.getElementById('completeMsg').classList.toggle('show', total > 0 && done === total);
+}
+
+/* ====== 点击委托：打卡项 / 计时器 / 说明 ====== */
+function toggleItem(id) {
+  if (selectedDate !== todayStr()) return;
+  const found = findItem(selectedDate, id);
+  if (!found) return;
+  const on = !getCheckState(selectedDate, id);
+  setCheckState(selectedDate, id, on);
+
+  if (on) autoTrackUsage(found.item.name);
+  else autoUntrackUsage(found.item.name);
+
+  const el = document.querySelector(`.check-item[data-id="${id}"]`);
+  if (el) {
+    el.classList.toggle('done', on);
+    el.setAttribute('aria-checked', on ? 'true' : 'false');
+    const cb = el.querySelector('.checkbox');
+    if (cb) cb.textContent = on ? '✓' : '';
+    if (on) {
+      el.classList.add('just-checked');
+      setTimeout(() => el.classList.remove('just-checked'), 450);
+    }
+  }
+  updateProgress();
+}
+
+document.addEventListener('click', e => {
+  const timerBtn = e.target.closest('.timer-btn');
+  if (timerBtn) {
+    if (!timerBtn.disabled) handleTimerClick(timerBtn);
+    return;
+  }
+  const toggle = e.target.closest('.note-toggle');
+  if (toggle) {
+    toggle.querySelector('.arrow').classList.toggle('open');
+    toggle.nextElementSibling.classList.toggle('expanded');
+    return;
+  }
+  const itemEl = e.target.closest('.check-item');
+  if (itemEl && itemEl.dataset.id) toggleItem(itemEl.dataset.id);
+});
+
+// 键盘可达性：空格 / 回车切换勾选
+document.addEventListener('keydown', e => {
+  if (e.key !== ' ' && e.key !== 'Enter') return;
+  const el = e.target.closest ? e.target.closest('.check-item') : null;
+  if (el && el.dataset.id) { e.preventDefault(); toggleItem(el.dataset.id); }
+});
+
+/* ====== 周条 ====== */
+function renderWeekBar() {
+  const ws = new Date(weekStart.getTime());
+  let html = '';
+  const today = todayStr();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(ws.getTime());
+    d.setDate(ws.getDate() + i);
+    const ds = dateStr(d);
+    const hasRecord = !!localStorage.getItem(ds);
+    html += `<button class="week-btn${ds === selectedDate ? ' active' : ''}${ds === today ? ' today' : ''}${hasRecord ? ' has-record' : ''}" onclick="selectDate('${ds}')">
+      <div class="day-label">${dayShort[d.getDay()]}</div>
+      <div class="day-num">${d.getDate()}</div>
+    </button>`;
+  }
+  document.getElementById('weekBar').innerHTML = html;
+}
+
+function selectDate(ds) {
+  stopAllTimers();
+  selectedDate = ds;
+  if (activeTab === 'routine') renderRoutine();
+}
+
+function shiftWeek(delta) {
+  weekStart = new Date(weekStart.getTime());
+  weekStart.setDate(weekStart.getDate() + delta * 7);
+  const we = new Date(weekStart.getTime());
+  we.setDate(weekStart.getDate() + 6);
+  const sd = parseDate(selectedDate);
+  if (sd < weekStart || sd > we) selectedDate = dateStr(weekStart);
+  if (activeTab === 'routine') renderRoutine();
+}
+
+function goToday() {
+  selectedDate = todayStr();
+  weekStart = getMonday(new Date());
+  renderRoutine();
+}
+
+/* ====== 计时器（基于 endAt 时间戳，可跨刷新恢复） ====== */
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, '0')}`;
+}
+function stopAllTimers() {
+  Object.keys(activeTimers).forEach(id => {
+    if (activeTimers[id] && activeTimers[id].intervalId) clearInterval(activeTimers[id].intervalId);
+  });
+  activeTimers = {};
+}
+function runTimer(id, endAt) {
+  if (activeTimers[id] && activeTimers[id].intervalId) clearInterval(activeTimers[id].intervalId);
+  const tick = () => {
+    const left = Math.ceil((endAt - Date.now()) / 1000);
+    if (left <= 0) {
+      if (activeTimers[id]) clearInterval(activeTimers[id].intervalId);
+      delete activeTimers[id];
+      setTimerEntry(selectedDate, id, { state: 'done' });
+      updateTimerButton(id, 0);
+      timerDoneAlert(id);
+      return;
+    }
+    updateTimerButton(id, left);
+  };
+  activeTimers[id] = { endAt, intervalId: setInterval(tick, 250) };
+  tick();
+}
+function startTimer(id, totalSec) {
+  const endAt = Date.now() + totalSec * 1000;
+  setTimerEntry(selectedDate, id, { state: 'running', endAt });
+  runTimer(id, endAt);
+}
+function handleTimerClick(btn) {
+  const id = btn.dataset.timerId;
+  const totalSec = parseInt(btn.dataset.totalSec, 10);
+  const state = getTimerState(selectedDate, id);
+  if (state === 'idle') {
+    startTimer(id, totalSec);
+  } else if (state === 'running') {
+    if (activeTimers[id]) { clearInterval(activeTimers[id].intervalId); delete activeTimers[id]; }
+    setTimerEntry(selectedDate, id, { state: 'idle' });
+    btn.className = 'timer-btn start';
+    btn.textContent = btn.dataset.totalSec ? formatTime(totalSec) : '开始';
+  } else {
+    setTimerEntry(selectedDate, id, { state: 'idle' });
+    btn.className = 'timer-btn start';
+    btn.textContent = formatTime(totalSec);
+  }
+}
+function updateTimerButton(id, secLeft) {
+  const btn = document.querySelector(`[data-timer-id="${id}"]`);
+  if (!btn) return;
+  if (btn.classList.contains('guide-timer')) {
+    btn.classList.toggle('running', secLeft > 0);
+    btn.classList.toggle('done', secLeft <= 0);
+    btn.textContent = secLeft > 0 ? formatTime(secLeft) : '完成';
+    return;
+  }
+  if (secLeft <= 0) {
+    btn.className = 'timer-btn done';
+    btn.textContent = '✓ 好了';
+  } else {
+    btn.className = 'timer-btn running';
+    btn.textContent = formatTime(secLeft);
+  }
+}
+function timerDoneAlert(id) {
+  if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200, 100, 200]); } catch (e) {} }
+  try {
+    const audio = document.getElementById('timerAudio');
+    if (audio) { audio.currentTime = 0; const p = audio.play(); if (p && p.catch) p.catch(() => {}); }
+  } catch (e) {}
+  const found = findItem(selectedDate, id);
+  if (found) showToast(`⏰ ${found.item.name} 时间到！`);
+}
+
+/* ====== Toast（支持撤销按钮） ====== */
+let toastTimer = null;
+function showToast(msg, opts) {
+  opts = opts || {};
+  let toast = document.getElementById('toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast';
+    toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.88);color:#fff;padding:16px 24px;border-radius:12px;font-size:15px;z-index:9999;opacity:0;transition:opacity 0.3s;text-align:center;max-width:80vw;display:flex;align-items:center;justify-content:center;gap:4px;';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = '';
+  const span = document.createElement('span');
+  span.textContent = msg;
+  toast.appendChild(span);
+
+  if (opts.actionText && opts.onAction) {
+    const btn = document.createElement('button');
+    btn.className = 'toast-btn';
+    btn.textContent = opts.actionText;
+    btn.onclick = ev => {
+      ev.stopPropagation();
+      toast.style.opacity = '0';
+      opts.onAction();
+    };
+    toast.appendChild(btn);
+  }
+
+  toast.style.opacity = '1';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.style.opacity = '0'; }, opts.duration || 2500);
+}
+
+/* ====== 重置（带确认 + 撤销） ====== */
+function resetToday() {
+  if (selectedDate !== todayStr()) return;
+  if (!confirm('确定重置今天的打卡记录吗？')) return;
+
+  const key = getViewKey();
+  const snapDay = localStorage.getItem(key);
+  const snapTimer = localStorage.getItem(key + '_timer');
+
+  const data = readDay(key);
+  itemsOf(selectedDate).forEach(({ id, item }) => {
+    if (data[id]) autoUntrackUsage(item.name);
+  });
+
+  localStorage.removeItem(key);
+  localStorage.removeItem(key + '_timer');
+  _dayCache.delete(key);
+  _timerCache.delete(key + '_timer');
+
+  stopAllTimers();
+  renderRoutine();
+  renderWeekBar();
+
+  showToast('已重置今天的打卡记录', {
+    actionText: '撤销',
+    duration: 5000,
+    onAction: () => {
+      if (snapDay) localStorage.setItem(key, snapDay);
+      if (snapTimer) localStorage.setItem(key + '_timer', snapTimer);
+      _dayCache.delete(key);
+      _timerCache.delete(key + '_timer');
+      // 把用掉的产品次数加回来
+      try {
+        const d = JSON.parse(snapDay || '{}');
+        itemsOf(selectedDate).forEach(({ id, item }) => { if (d[id]) autoTrackUsage(item.name); });
+      } catch (e) {}
+      renderRoutine();
+      renderWeekBar();
+      showToast('已恢复重置前的记录');
+    }
+  });
+}
+
+/* ====== 连续打卡 ====== */
+function hasCheckOn(dateKey) {
+  const d = readDay(dateKey);
+  return Object.keys(d).some(k => (k[0] === 'm' || k[0] === 'e') && d[k]);
+}
+function calcStreak() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let streak = 0;
+  // 今天还没打卡不算断档，从昨天开始往前数
+  let i = hasCheckOn(dateStr(today)) ? 0 : 1;
+  for (; i < 400; i++) {
+    const d = new Date(today.getTime());
+    d.setDate(today.getDate() - i);
+    if (hasCheckOn(dateStr(d))) streak++;
+    else break;
+  }
+  return streak;
+}
+
+/* ====== 备份 ====== */
+function exportData() {
+  const backup = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && APP_KEY_RE.test(key)) backup[key] = localStorage.getItem(key);
+  }
+  const json = JSON.stringify(backup, null, 2);
+  // 原生 APP 外壳内：交给原生保存到系统「下载」目录（WebView 不支持 blob 下载）
+  if (window.AndroidBridge && typeof window.AndroidBridge.saveFile === 'function') {
+    window.AndroidBridge.saveFile(`skincare_backup_${todayStr()}.json`, json);
+    showToast('已导出到手机「下载」目录');
+    return;
+  }
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `skincare_backup_${todayStr()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('数据已导出！');
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.onchange = function (e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('格式错误');
+        let count = 0;
+        Object.keys(data).forEach(key => {
+          if (!APP_KEY_RE.test(key)) return; // 只接受本应用的数据
+          if (typeof data[key] !== 'string') return;
+          localStorage.setItem(key, data[key]);
+          count++;
+        });
+        if (count === 0) throw new Error('没有可导入的数据');
+        _dayCache.clear();
+        _timerCache.clear();
+        showToast(`已导入 ${count} 条数据！`);
+        selectedDate = todayStr();
+        weekStart = getMonday(new Date());
+        viewingRecordDate = null;
+        if (activeTab === 'routine') renderRoutine();
+        else if (activeTab === 'restock') renderRestock();
+        else if (activeTab === 'records') renderRecords();
+      } catch (err) {
+        showToast('导入失败：文件格式不正确');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+/* ====== 便签 ====== */
+const NOTE_COLORS = [
+  { name: '黄', bg: '#fef3c7', border: '#fbbf24' },
+  { name: '粉', bg: '#fce7f3', border: '#f472b6' },
+  { name: '绿', bg: '#d1fae5', border: '#34d399' },
+  { name: '蓝', bg: '#dbeafe', border: '#60a5fa' },
+  { name: '紫', bg: '#ede9fe', border: '#a78bfa' },
+  { name: '橙', bg: '#ffedd5', border: '#fb923c' }
+];
+
+function getNotes() {
+  try { const n = JSON.parse(localStorage.getItem('skincare_notes') || '[]'); return Array.isArray(n) ? n : []; }
+  catch (e) { return []; }
+}
+function saveNotes(notes) {
+  localStorage.setItem('skincare_notes', JSON.stringify(notes));
+}
+
+function renderNotes() {
+  const content = document.getElementById('content');
+  const notes = getNotes();
+  let html = '<div class="notes-container"><div class="notes-header"><h3>📝 便签</h3>';
+  html += '<button class="notes-add-btn" onclick="addNote()">+ 新建</button></div><div class="notes-grid">';
+
+  if (notes.length === 0) {
+    html += '<div class="notes-empty">还没有便签，点击「+ 新建」开始记录吧 ✨</div>';
+  } else {
+    notes.forEach(note => {
+      const colorObj = NOTE_COLORS.find(c => c.name === note.color) || NOTE_COLORS[0];
+      const d = note.createdAt ? new Date(note.createdAt).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }) : '';
+      html += `<div class="note-card" style="background:${colorObj.bg};border:1px solid ${colorObj.border}">`;
+      html += `<div class="note-text" contenteditable="true" data-note-id="${escapeHtml(note.id)}" onblur="updateNoteText(this.dataset.noteId, this.innerText)">${escapeHtml(note.content)}</div>`;
+      html += '<div class="note-footer">';
+      html += `<span>${escapeHtml(d)}</span>`;
+      html += '<div class="note-color-picker">';
+      NOTE_COLORS.forEach(c => {
+        const sel = c.name === note.color;
+        html += `<div class="note-color-dot${sel ? ' selected' : ''}" style="background:${c.bg};border-color:${sel ? 'rgba(0,0,0,0.5)' : c.border}" onclick="changeNoteColor('${escapeHtml(note.id)}','${c.name}')"></div>`;
+      });
+      html += '</div>';
+      html += `<button class="note-delete" onclick="deleteNote('${escapeHtml(note.id)}')">✕</button>`;
+      html += '</div></div>';
+    });
+  }
+  html += '</div></div>';
+  content.innerHTML = html;
+}
+
+function addNote() {
+  const notes = getNotes();
+  const colorIdx = notes.length % NOTE_COLORS.length;
+  const newNote = {
+    id: 'note_' + Date.now(),
+    content: '',
+    color: NOTE_COLORS[colorIdx].name,
+    createdAt: new Date().toISOString()
+  };
+  notes.unshift(newNote);
+  saveNotes(notes);
+  renderNotes();
+  const el = document.querySelector(`[data-note-id="${newNote.id}"]`);
+  if (el) { el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+}
+
+function updateNoteText(id, text) {
+  const notes = getNotes();
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+  const content = String(text || '').replace(/\u00a0/g, ' ').trim();
+  if (!content) {
+    saveNotes(notes.filter(n => n.id !== id));
+    renderNotes();
+    return;
+  }
+  if (note.content === content) return;
+  note.content = content;
+  saveNotes(notes);
+}
+
+function deleteNote(id) {
+  saveNotes(getNotes().filter(n => n.id !== id));
+  renderNotes();
+}
+
+function changeNoteColor(id, colorName) {
+  const notes = getNotes();
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+  note.color = colorName;
+  saveNotes(notes);
+  renderNotes();
+}
+
+/* ====== 跨天自动刷新 ====== */
+function checkDayRollover() {
+  const now = todayStr();
+  if (now === lastDayKey) return;
+  lastDayKey = now;
+  selectedDate = now;
+  weekStart = getMonday(new Date());
+  stopAllTimers();
+  if (activeTab === 'routine') renderRoutine();
+  showToast('新的一天，打卡已重置');
+}
+
+/* ================= 新增数据层 ================= */
+const ROUTINE_KEY = 'skincare_routine';
+const SKIN_KEY = 'skincare_skin';
+const SNAP_KEY = 'skincare_snapshots';
+const REMIND_KEY = 'skincare_reminder';
+const THEME_KEY = 'skincare_theme';
+const SKIN_TAGS = ['泛红', '爆痘', '干燥', '闭口变少', '出油多', '状态稳定'];
+// 备份/快照覆盖的 key（比导出白名单多几个配置项）
+const BACKUP_RE = /^(\d{4}-\d{2}-\d{2}(_timer)?|restock_data|skincare_notes|skincare_skin|skincare_routine|skincare_reminder|skincare_theme)$/;
+
+/* ---- 主题 ---- */
+function applyTheme(t) {
+  document.body.classList.toggle('light', t === 'light');
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+}
+function currentTheme() {
+  try { return localStorage.getItem(THEME_KEY) || 'dark'; } catch (e) { return 'dark'; }
+}
+function toggleTheme() {
+  applyTheme(currentTheme() === 'light' ? 'dark' : 'light');
+  showToast(currentTheme() === 'light' ? '已切换到浅色' : '已切换到深色');
+  if (activeTab === 'settings') renderSettings();
+}
+
+/* ---- 流程配置（可编辑，缺省用内置 routines） ---- */
+let routineCache = null;
+function getRoutine() {
+  if (routineCache) return routineCache;
+  try {
+    const raw = localStorage.getItem(ROUTINE_KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      if (o && Array.isArray(o.morning) && o.evening && typeof o.evening === 'object') {
+        routineCache = o;
+        return o;
+      }
+    }
+  } catch (e) {}
+  return routines;
+}
+function saveRoutineConfig(cfg) {
+  routineCache = cfg;
+  try { localStorage.setItem(ROUTINE_KEY, JSON.stringify(cfg)); } catch (e) {}
+}
+function resetRoutineConfig() {
+  routineCache = null;
+  try { localStorage.removeItem(ROUTINE_KEY); } catch (e) {}
+}
+
+/* ---- 皮肤状态 ---- */
+function getSkinAll() {
+  try {
+    const o = JSON.parse(localStorage.getItem(SKIN_KEY) || '{}');
+    return o && typeof o === 'object' && !Array.isArray(o) ? o : {};
+  } catch (e) { return {}; }
+}
+function getSkin(dateKey) { return getSkinAll()[dateKey] || null; }
+function setSkin(dateKey, entry) {
+  const all = getSkinAll();
+  const has = entry && ((entry.score && entry.score > 0) || (entry.tags && entry.tags.length) || (entry.note && entry.note.length));
+  if (has) all[dateKey] = entry; else delete all[dateKey];
+  try { localStorage.setItem(SKIN_KEY, JSON.stringify(all)); } catch (e) {}
+}
+
+/* ---- 自动快照（保留最近 7 份，防误操作/换机） ---- */
+function takeSnapshot(force) {
+  try {
+    const day = todayStr();
+    const all = JSON.parse(localStorage.getItem(SNAP_KEY) || '[]');
+    if (!force && all.some(s => s.day === day)) return;
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && BACKUP_RE.test(k)) data[k] = localStorage.getItem(k);
+    }
+    const filtered = all.filter(s => s.day !== day);
+    filtered.unshift({ day, ts: Date.now(), data });
+    localStorage.setItem(SNAP_KEY, JSON.stringify(filtered.slice(0, 7)));
+  } catch (e) {}
+}
+function listSnapshots() {
+  try { return JSON.parse(localStorage.getItem(SNAP_KEY) || '[]'); } catch (e) { return []; }
+}
+function restoreSnapshot(day) {
+  const snap = listSnapshots().find(s => s.day === day);
+  if (!snap) return false;
+  Object.keys(snap.data).forEach(k => { try { localStorage.setItem(k, snap.data[k]); } catch (e) {} });
+  _dayCache.clear(); _timerCache.clear(); routineCache = null;
+  return true;
+}
+
+/* ---- 提醒 ---- */
+function getReminder() {
+  try {
+    const r = JSON.parse(localStorage.getItem(REMIND_KEY) || 'null');
+    if (r && typeof r === 'object') return { on: !!r.on, time: r.time || '21:30' };
+  } catch (e) {}
+  return { on: false, time: '21:30' };
+}
+function setReminder(r) {
+  try { localStorage.setItem(REMIND_KEY, JSON.stringify(r)); } catch (e) {}
+}
+function checkReminder() {
+  const r = getReminder();
+  if (!r.on) return;
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const now = new Date();
+  const parts = (r.time || '21:30').split(':').map(Number);
+  if (now.getHours() * 60 + now.getMinutes() < parts[0] * 60 + parts[1]) return;
+  const today = todayStr();
+  if (hasCheckOn(today)) return;
+  if (localStorage.getItem('skincare_reminded_' + today)) return;
+  try { localStorage.setItem('skincare_reminded_' + today, '1'); } catch (e) {}
+  try {
+    new Notification('护肤打卡', { body: '今天还没打卡，晚间流程别忘了～', icon: 'icon-192.png', tag: 'skincare' });
+  } catch (e) {}
+}
+function requestReminderPermission() {
+  const r = getReminder();
+  if (r.on) {
+    setReminder({ on: false, time: r.time });
+    showToast('提醒已关闭');
+    renderSettings();
+    return;
+  }
+  if (typeof Notification === 'undefined') {
+    showToast('这个浏览器不支持通知，只能靠页面内提示');
+    return;
+  }
+  Notification.requestPermission().then(p => {
+    if (p === 'granted') {
+      setReminder({ on: true, time: r.time });
+      showToast('已开启，到点会提醒（需应用在后台或打开）');
+    } else {
+      showToast('通知权限被拒绝，可去系统设置里开');
+    }
+    renderSettings();
+  }).catch(() => {});
+}
+
+/* ---- 设置页 ---- */
+let settingsGroup = 'morning';
+
+function renderSettings() {
+  const content = document.getElementById('content');
+  const theme = currentTheme();
+  const rem = getReminder();
+  const snaps = listSnapshots();
+  const cfg = getRoutine();
+
+  let html = '<div class="settings"><h2>⚙️ 设置</h2>';
+
+  // 外观
+  html += `<div class="set-group">
+    <div class="set-row"><div><div>外观</div><div class="sub">深色更护眼，浅色适合白天</div></div>
+      <button class="set-btn" onclick="toggleTheme()">${theme === 'light' ? '☀️ 浅色' : '🌙 深色'}</button></div>
+    <div class="set-row"><div><div>每天提醒</div><div class="sub">${rem.on ? '每天 ' + rem.time + ' 提醒未打卡' : '未开启'}</div></div>
+      <button class="set-btn" onclick="requestReminderPermission()">${rem.on ? '关闭' : '开启'}</button></div>
+    ${rem.on ? `<div class="set-row"><div>提醒时间</div>
+      <input type="time" value="${rem.time}" onchange="setReminder({on:true,time:this.value});renderSettings()"
+        style="background:#101010;border:1px solid #242424;border-radius:8px;color:#ddd;padding:6px 8px;font-family:inherit;"></div>` : ''}
+  </div>`;
+
+  // 流程编辑
+  html += `<div class="set-group" style="padding:14px;">
+    <div class="set-row" style="border:none;padding-bottom:8px;"><div><div>护肤流程</div><div class="sub">改完会影响打卡项，历史记录不受影响</div></div></div>
+    <div class="seg">${groupTabsHTML()}</div>
+    <div id="stepList">${stepsEditorHTML(cfg)}</div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button class="set-btn" style="flex:1" onclick="addStep()">＋ 添加一步</button>
+      <button class="set-btn" style="flex:1" onclick="saveSteps()">💾 保存</button>
+    </div>
+    <div style="margin-top:10px;"><button class="set-btn warn" style="width:100%" onclick="restoreDefaultRoutine()">恢复默认流程</button></div>
+  </div>`;
+
+  // 备份
+  html += `<div class="set-group">
+    <div class="set-row"><div><div>立即备份</div><div class="sub">已保存 ${snaps.length} 份自动快照（最近 7 天）</div></div>
+      <button class="set-btn" onclick="takeSnapshot(true);showToast('已备份');renderSettings()">备份</button></div>
+    ${snaps.length ? `<div class="set-row"><div><div>恢复快照</div><div class="sub">${snaps.map(s => s.day).join(' · ')}</div></div>
+      <button class="set-btn" onclick="showSnapshots()">查看</button></div>` : ''}
+    <div class="set-row"><div><div>导出文件</div><div class="sub">换手机时用这个</div></div>
+      <button class="set-btn" onclick="exportData()">导出</button></div>
+    <div class="set-row"><div><div>导入文件</div><div class="sub">会覆盖同名的数据</div></div>
+      <button class="set-btn" onclick="importData()">导入</button></div>
+  </div>`;
+
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function groupTabsHTML() {
+  const cfg = getRoutine();
+  const groups = [['morning', '☀️ 早间']].concat(
+    [0, 1, 2, 3, 4, 5, 6].map(d => [String(d), dayNames[d]])
+  );
+  // 周日起头，和 routines.evening 的 key 一致
+  const ordered = groups.slice(0, 1).concat([6, 0, 1, 2, 3, 4, 5].map(d => [String(d), dayNames[d]]));
+  return ordered.map(([k, label]) =>
+    `<button class="${String(settingsGroup) === k ? 'on' : ''}" onclick="switchSettingsGroup('${k}')">${label}</button>`
+  ).join('');
+}
+
+function currentSteps() {
+  const cfg = getRoutine();
+  if (settingsGroup === 'morning') return cfg.morning;
+  return cfg.evening[settingsGroup] || [];
+}
+
+function stepsEditorHTML(cfg) {
+  const list = settingsGroup === 'morning' ? cfg.morning : (cfg.evening[settingsGroup] || []);
+  if (!list.length) return '<div class="sub" style="padding:8px 0;">这一组还没有步骤</div>';
+  return list.map((s, i) => `<div class="step-edit" data-idx="${i}"
+      data-tag="${escapeHtml(s.tag || '')}" data-tagtext="${escapeHtml(s.tagText || '')}"
+      data-timer="${s.timer || ''}" data-timerlabel="${escapeHtml(s.timerLabel || '')}">
+      <input class="name" value="${escapeHtml(s.name)}" placeholder="步骤名">
+      <input class="meta" value="${escapeHtml(s.note || '')}" placeholder="说明（可选）">
+      <button class="del" onclick="removeStep(${i})">✕</button>
+    </div>`).join('');
+}
+
+function switchSettingsGroup(g) {
+  saveSteps(true);
+  settingsGroup = g;
+  renderSettings();
+}
+
+function collectSteps() {
+  const rows = document.querySelectorAll('.step-edit');
+  return Array.prototype.map.call(rows, r => {
+    const item = {
+      name: r.querySelector('.name').value.trim(),
+      note: r.querySelector('.meta').value.trim()
+    };
+    if (r.dataset.tag) { item.tag = r.dataset.tag; item.tagText = r.dataset.tagtext; }
+    if (r.dataset.timer) { item.timer = parseInt(r.dataset.timer, 10); item.timerLabel = r.dataset.timerlabel; }
+    return item;
+  }).filter(x => x.name);
+}
+
+function saveSteps(silent) {
+  const cfg = getRoutine();
+  const next = JSON.parse(JSON.stringify(cfg));
+  const steps = collectSteps();
+  if (settingsGroup === 'morning') next.morning = steps;
+  else next.evening[settingsGroup] = steps;
+  saveRoutineConfig(next);
+  if (!silent) {
+    showToast('流程已保存');
+    renderSettings();
+  }
+}
+
+function addStep() {
+  const cfg = getRoutine();
+  const steps = collectSteps();
+  steps.push({ name: '新步骤', note: '' });
+  const next = JSON.parse(JSON.stringify(cfg));
+  if (settingsGroup === 'morning') next.morning = steps;
+  else next.evening[settingsGroup] = steps;
+  saveRoutineConfig(next);
+  renderSettings();
+}
+
+function removeStep(i) {
+  const steps = collectSteps();
+  steps.splice(i, 1);
+  const cfg = getRoutine();
+  const next = JSON.parse(JSON.stringify(cfg));
+  if (settingsGroup === 'morning') next.morning = steps;
+  else next.evening[settingsGroup] = steps;
+  saveRoutineConfig(next);
+  renderSettings();
+}
+
+function restoreDefaultRoutine() {
+  if (!confirm('恢复成内置的默认流程？你改过的会被覆盖。')) return;
+  resetRoutineConfig();
+  showToast('已恢复默认流程');
+  renderSettings();
+}
+
+function showSnapshots() {
+  const snaps = listSnapshots();
+  openSheet('选择要恢复的快照', snaps.map(s =>
+    `<div class="set-row"><div><div>${s.day}</div><div class="sub">${new Date(s.ts).toLocaleString('zh-CN')} · ${Object.keys(s.data).length} 项</div></div>
+      <button class="set-btn" onclick="doRestore('${s.day}')">恢复</button></div>`
+  ).join(''), '');
+}
+
+function doRestore(day) {
+  closeSheet();
+  if (!confirm('恢复 ' + day + ' 的快照？当前数据会被覆盖。')) return;
+  if (restoreSnapshot(day)) {
+    showToast('已恢复 ' + day + ' 的数据');
+    renderRoutine();
+  } else {
+    showToast('没找到这个快照');
+  }
+}
+
+/* ---- 通用底部弹层 ---- */
+function openSheet(title, bodyHtml, footerHtml) {
+  closeSheet();
+  const div = document.createElement('div');
+  div.className = 'overlay';
+  div.id = 'sheetOverlay';
+  div.onclick = e => { if (e.target === div) closeSheet(); };
+  div.innerHTML = `<div class="sheet"><h3>${title}</h3>${bodyHtml}${footerHtml || ''}</div>`;
+  document.body.appendChild(div);
+}
+function closeSheet() {
+  const el = document.getElementById('sheetOverlay');
+  if (el) el.remove();
+}
+
+/* ================= 引导模式 ================= */
+let guide = null;
+
+function startGuide(part) {
+  if (selectedDate !== todayStr()) { showToast('只能引导今天哦'); return; }
+  const cfg = getRoutine();
+  const dow = parseDate(selectedDate).getDay();
+  const items = part === 'morning' ? cfg.morning : (cfg.evening[dow] || []);
+  if (!items.length) { showToast('这一组还没有步骤'); return; }
+  const ids = items.map((_, i) => (part === 'morning' ? 'm_' : 'e_') + i);
+  let start = ids.findIndex(id => !getCheckState(selectedDate, id));
+  if (start < 0) start = 0;
+  guide = { part, ids, idx: start };
+  renderGuide();
+}
+
+function guideItems() {
+  const cfg = getRoutine();
+  const dow = parseDate(selectedDate).getDay();
+  return guide.part === 'morning' ? cfg.morning : (cfg.evening[dow] || []);
+}
+
+function renderGuide() {
+  if (!guide) return;
+  let el = document.getElementById('guideView');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'guideView';
+    document.body.appendChild(el);
+  }
+  el.classList.add('show');
+
+  const items = guideItems();
+  const total = items.length;
+  const i = Math.min(guide.idx, total - 1);
+  const item = items[i] || {};
+  const id = guide.ids[i];
+  const done = getCheckState(selectedDate, id);
+  const st = item.timer ? getTimerState(selectedDate, id) : 'idle';
+  const pct = Math.round(((i + (done ? 1 : 0)) / total) * 100);
+
+  let timerHtml = '';
+  if (item.timer) {
+    const entry = getTimerEntry(selectedDate, id);
+    let label = item.timerLabel || formatTime(item.timer);
+    if (st === 'running' && entry && entry.endAt) label = formatTime(Math.max(1, Math.ceil((entry.endAt - Date.now()) / 1000)));
+    if (st === 'done') label = '完成';
+    const cls = st === 'running' ? ' running' : (st === 'done' ? ' done' : '');
+    timerHtml = `<div class="guide-timer${cls}" data-timer-id="${id}" data-total-sec="${item.timer}"
+      onclick="guideTimerTap(this, '${id}', ${item.timer})">${label}</div>`;
+  }
+
+  el.innerHTML = `
+    <div class="guide-top">
+      <span>${guide.part === 'morning' ? '☀️ 早间护肤' : '🌙 晚间护肤'} · ${i + 1}/${total}</span>
+      <button class="guide-close" onclick="closeGuide()">✕</button>
+    </div>
+    <div class="guide-progress"><div style="width:${pct}%"></div></div>
+    <div class="guide-card">
+      <div class="guide-step">第 ${i + 1} 步</div>
+      <div class="guide-name">${escapeHtml(item.name || '')}</div>
+      ${item.tag ? `<span class="guide-tag">${escapeHtml(item.tagText || '')}</span>` : ''}
+      ${item.note ? `<div class="guide-note">${escapeHtml(item.note)}</div>` : ''}
+      ${timerHtml}
+    </div>
+    <div class="guide-actions">
+      <button class="guide-btn ghost" onclick="guidePrev()">上一步</button>
+      <button class="guide-btn primary" onclick="guideNext()">${done ? '下一步 ›' : '完成 ›'}</button>
+    </div>`;
+
+  if (st === 'running') {
+    const entry = getTimerEntry(selectedDate, id);
+    if (entry && entry.endAt && activeTimers[id] === undefined) runTimer(id, entry.endAt);
+  }
+}
+
+function guideNext() {
+  if (!guide) return;
+  const id = guide.ids[guide.idx];
+  if (selectedDate === todayStr() && !getCheckState(selectedDate, id)) {
+    toggleItem(id);
+  }
+  if (guide.idx < guide.ids.length - 1) {
+    guide.idx++;
+    renderGuide();
+  } else {
+    finishGuide();
+  }
+}
+
+function guidePrev() {
+  if (guide && guide.idx > 0) { guide.idx--; renderGuide(); }
+}
+
+function guideTimerTap(el, id, sec) {
+  const st = getTimerState(selectedDate, id);
+  if (st === 'running') {
+    if (activeTimers[id]) { clearInterval(activeTimers[id].intervalId); delete activeTimers[id]; }
+    setTimerEntry(selectedDate, id, { state: 'idle' });
+    if (el) { el.classList.remove('running'); el.textContent = formatTime(sec); }
+    return;
+  }
+  startTimer(id, sec);
+}
+
+function closeGuide() {
+  const el = document.getElementById('guideView');
+  if (el) el.classList.remove('show');
+  guide = null;
+  if (activeTab === 'routine') renderRoutine();
+}
+
+function finishGuide() {
+  const el = document.getElementById('guideView');
+  if (el) el.classList.remove('show');
+  guide = null;
+  if (activeTab === 'routine') renderRoutine();
+  showToast('✨ 全部做完啦，今天很棒！');
+}
+
+/* ================= 皮肤状态 ================= */
+function skinSummaryHtml() {
+  const data = getSkin(selectedDate);
+  const score = data ? (data.score || 0) : 0;
+  let html = '<div class="skin-card"><div class="skin-head"><span>🫧 今天皮肤怎么样</span><span style="font-size:11px;color:#666;">可跳过</span></div>';
+  html += '<div class="skin-score">';
+  for (let i = 1; i <= 5; i++) {
+    html += `<button class="skin-dot${score === i ? ' on' : ''}" onclick="openSkinSheet(${i})">${i}</button>`;
+  }
+  html += '</div>';
+  if (data && data.tags && data.tags.length) {
+    html += `<div class="chips" style="margin-top:10px;">${data.tags.map(t => `<span class="chip on">${escapeHtml(t)}</span>`).join('')}</div>`;
+  }
+  if (data && data.note) {
+    html += `<div class="sub" style="margin-top:8px;">${escapeHtml(data.note)}</div>`;
+  }
+  html += `<button class="set-btn" style="width:100%;margin-top:10px;" onclick="openSkinSheet(0)">${data ? '修改记录' : '详细记录'}</button>`;
+  html += '</div>';
+  return html;
+}
+
+let skinDraft = null;
+
+function openSkinSheet(preScore) {
+  const existing = getSkin(selectedDate) || { score: 0, tags: [], note: '' };
+  skinDraft = {
+    score: preScore || existing.score || 0,
+    tags: (existing.tags || []).slice(),
+    note: existing.note || ''
+  };
+  drawSkinSheet();
+}
+
+function syncSkinNote() {
+  const el = document.getElementById('skinNote');
+  if (el && skinDraft) skinDraft.note = el.value;
+}
+
+function drawSkinSheet() {
+  const d = skinDraft;
+  let body = '<div class="sheet-label">今天的状态（1 差 — 5 好）</div><div class="skin-score">';
+  for (let i = 1; i <= 5; i++) {
+    body += `<button class="skin-dot${d.score === i ? ' on' : ''}" onclick="draftScore(${i})">${i}</button>`;
+  }
+  body += '</div><div class="sheet-label">怎么了（可多选）</div><div class="chips">';
+  SKIN_TAGS.forEach(t => {
+    body += `<button class="chip${d.tags.indexOf(t) >= 0 ? ' on' : ''}" onclick="draftTag('${t}')">${t}</button>`;
+  });
+  body += '</div><div class="sheet-label">备注</div>';
+  body += `<textarea class="skin-note" id="skinNote" rows="3" placeholder="比如：下巴起了一颗，有点干">${escapeHtml(d.note)}</textarea>`;
+  const footer = `<div style="display:flex;gap:10px;margin-top:16px;">
+    <button class="guide-btn ghost" onclick="closeSheet()">取消</button>
+    <button class="guide-btn primary" style="flex:1" onclick="saveSkinSheet()">保存</button></div>`;
+  openSheet('记录皮肤状态', body, footer);
+}
+
+function draftScore(i) { syncSkinNote(); skinDraft.score = i; drawSkinSheet(); }
+function draftTag(t) {
+  syncSkinNote();
+  const k = skinDraft.tags.indexOf(t);
+  if (k >= 0) skinDraft.tags.splice(k, 1); else skinDraft.tags.push(t);
+  drawSkinSheet();
+}
+function saveSkinSheet() {
+  syncSkinNote();
+  setSkin(selectedDate, skinDraft);
+  closeSheet();
+  showToast('已记录皮肤状态');
+  if (activeTab === 'routine') renderRoutine();
+}
+
+/* ================= 趋势 & 打卡图 ================= */
+function lastNDays(n) {
+  const out = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(today.getTime());
+    d.setDate(today.getDate() - i);
+    out.push(dateStr(d));
+  }
+  return out;
+}
+
+function trendBlockHtml() {
+  const days = lastNDays(30);
+  const skin = getSkinAll();
+  const bars = days.map(key => {
+    const p = dayProgress(key);
+    return { key, pct: p.total ? p.done / p.total : 0, score: skin[key] ? (skin[key].score || 0) : 0 };
+  });
+
+  let html = '<div class="set-group" style="padding:14px;margin:0 16px 12px;">';
+  html += '<div class="skin-head"><span>📈 最近 30 天完成率</span><span style="font-size:11px;color:#666;">越高越绿</span></div>';
+  html += '<div class="spark">';
+  bars.forEach(b => {
+    html += `<div class="bar${b.pct >= 0.999 ? ' hi' : ''}" style="height:${Math.max(2, Math.round(b.pct * 58))}px" title="${b.key}"></div>`;
+  });
+  html += '</div><div class="spark-legend"><span>30 天前</span><span>今天</span></div>';
+
+  const scored = bars.filter(b => b.score > 0);
+  if (scored.length) {
+    html += `<div class="skin-head" style="margin-top:16px;"><span>🫧 皮肤状态</span><span style="font-size:11px;color:#666;">${scored.length} 天有记录</span></div><div class="spark">`;
+    scored.forEach(b => {
+      html += `<div class="bar${b.score >= 4 ? ' hi' : ''}" style="height:${b.score * 11}px" title="${b.key} ${b.score} 分"></div>`;
+    });
+    html += '</div>';
+  }
+  html += `<div style="margin-top:14px;"><button class="set-btn" style="width:100%" onclick="exportCard()">🖼 生成打卡图</button></div>`;
+  html += '</div>';
+  return html;
+}
+
+function exportCard() {
+  if (typeof document.createElement('canvas').getContext !== 'function') {
+    showToast('当前环境不支持生成图片');
+    return;
+  }
+  const W = 720, H = 880;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+
+  const grad = g.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#12231a');
+  grad.addColorStop(1, '#0b0f0d');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, W, H);
+
+  g.textAlign = 'center';
+  g.fillStyle = '#c8e6c9';
+  g.font = 'bold 46px -apple-system, "PingFang SC", sans-serif';
+  g.fillText('护肤打卡', W / 2, 110);
+
+  const streak = calcStreak();
+  g.fillStyle = '#8bc34a';
+  g.font = '26px -apple-system, "PingFang SC", sans-serif';
+  g.fillText(`连续打卡 ${streak} 天`, W / 2, 158);
+
+  // 30 天网格（7 列）
+  const days = lastNDays(30);
+  const cell = 62, gap = 10, cols = 7;
+  const startX = (W - (cols * cell + (cols - 1) * gap)) / 2;
+  const startY = 230;
+  days.forEach((key, idx) => {
+    const p = dayProgress(key);
+    const pct = p.total ? p.done / p.total : 0;
+    const r = Math.floor(idx / cols), col = idx % cols;
+    const x = startX + col * (cell + gap), y = startY + r * (cell + gap);
+    g.fillStyle = pct >= 0.999 ? '#4caf50' : (pct > 0 ? '#2f6b45' : '#1a2620');
+    const rr = 12;
+    g.beginPath();
+    g.moveTo(x + rr, y);
+    g.arcTo(x + cell, y, x + cell, y + cell, rr);
+    g.arcTo(x + cell, y + cell, x, y + cell, rr);
+    g.arcTo(x, y + cell, x, y, rr);
+    g.arcTo(x, y, x + cell, y, rr);
+    g.closePath();
+    g.fill();
+    if (pct > 0) {
+      g.fillStyle = '#eaf5ee';
+      g.font = '18px -apple-system, sans-serif';
+      g.fillText(String(key.slice(8)), x + cell / 2, y + cell / 2 + 7);
+    }
+  });
+
+  const doneDays = days.filter(k => { const p = dayProgress(k); return p.total && p.done === p.total; }).length;
+  g.fillStyle = '#9ccc9c';
+  g.font = '22px -apple-system, "PingFang SC", sans-serif';
+  g.fillText(`30 天里 ${doneDays} 天全部完成`, W / 2, H - 92);
+
+  g.fillStyle = '#4a5a4e';
+  g.font = '18px -apple-system, sans-serif';
+  g.fillText(new Date().toLocaleDateString('zh-CN'), W / 2, H - 52);
+
+  if (typeof c.toBlob !== 'function') { showToast('当前环境不支持导出图片'); return; }
+  c.toBlob(blob => {
+    if (!blob) { showToast('生成失败'); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `skincare_card_${todayStr()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    showToast('打卡图已生成');
+  }, 'image/png');
+}
+
+
+
+/* ================= 补货用量预测 ================= */
+function productSteps(productName) {
+  const out = [];
+  Object.keys(STEP_TO_PRODUCT).forEach(step => {
+    if (STEP_TO_PRODUCT[step] === productName) out.push(step);
+  });
+  return out;
+}
+
+// 最近 N 天里，该产品对应步骤被勾选了多少次
+function usageInLastDays(productName, days) {
+  const steps = productSteps(productName);
+  if (!steps.length) return 0;
+  let count = 0;
+  lastNDays(days).forEach(key => {
+    const data = readDay(key);
+    itemsOf(key).forEach(({ id, item }) => {
+      if (steps.indexOf(item.name) >= 0 && data[id]) count++;
+    });
+  });
+  return count;
+}
+
+// 按"历史每瓶平均用量 + 近期日均用量"估算还能用几天
+function estimateDaysLeft(item) {
+  const avg = avgUsage(item.usageHistory);
+  if (!avg || avg <= 0) return null;
+  const used = item.usageCount || 0;
+  const remainUses = Math.max(0, avg - used);
+  if (remainUses <= 0) return 0;
+  const used14 = usageInLastDays(item.name, 14);
+  const perDay = used14 / 14;
+  if (perDay <= 0) return null;
+  return Math.max(0, Math.round(remainUses / perDay));
+}
+
+/* ====== 初始化 ====== */
+applyTheme(currentTheme());
+renderRoutine();
+setInterval(checkDayRollover, 30000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) { checkDayRollover(); checkReminder(); }
+});
+setInterval(checkReminder, 60000);
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist().catch(() => {});
+}
+
+/* ====== PWA: Service Worker ====== */
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    // 有新版本就提示，而不是让用户一直用旧缓存
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing;
+      if (!sw) return;
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+          showToast('有新版本，下拉或重开应用即可更新', { duration: 4000 });
+        }
+      });
+    });
+  }).catch(() => {});
+}
+
+</script>
+</body>
+</html>
