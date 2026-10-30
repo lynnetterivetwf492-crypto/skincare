@@ -4,7 +4,7 @@
  *  - 页面导航（navigate）→ 网络优先，失败回退缓存（保证能拿到新版本）
  *  - 静态资源 → 先返回缓存，同时后台更新（stale-while-revalidate）
  */
-const CACHE_NAME = 'skincare-v2';
+const CACHE_NAME = 'skincare-v3';
 const ASSETS = [
   './',
   './index.html',
