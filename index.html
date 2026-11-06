@@ -30,7 +30,7 @@ body {
 .note-peek .np-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
 .note-peek.empty { color: #666; text-align: center; display: flex; align-items: center; justify-content: center; min-height: 44px; }
 .date { font-size: 13px; color: #888; margin-top: 4px; }
-.day-badge { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+.day-badge { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; line-height: 1.4; }
 .day-badge.rest { background: #2a2a2a; color: #999; }
 .day-badge.mild { background: #1a2e1a; color: #8bc34a; }
 .day-badge.active { background: #2e1a1a; color: #ff8a65; }
@@ -54,7 +54,9 @@ body {
 .week-btn.has-record::before { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #66bb6a; }
 
 /* Progress */
-.progress-bar { height: 3px; background: #1a1a1a; border-radius: 2px; margin-top: 12px; overflow: hidden; }
+.progress-wrap { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.progress-bar { flex: 1; height: 6px; background: #1c1c1c; border-radius: 4px; overflow: hidden; }
+.progress-pct { font-size: 11px; color: #888; min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
 .progress-fill { height: 100%; background: linear-gradient(90deg, #66bb6a, #a5d6a7); border-radius: 2px; transition: width 0.4s; width: 0; }
 
 /* Sections */
@@ -66,8 +68,8 @@ body {
 /* Check items */
 .check-item { display: flex; align-items: center; padding: 10px 8px; border-radius: 10px; margin-bottom: 4px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; cursor: pointer; }
 .check-item:active { background: #1a1a24; }
-.check-item.done { opacity: 0.45; }
-.check-item.done .label { text-decoration: line-through; color: #666; }
+.check-item.done { opacity: 0.58; }
+.check-item.done .label { text-decoration: line-through; color: #777; }
 .checkbox { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #333; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 12px; }
 .check-item.done .checkbox { background: #4caf50; border-color: #4caf50; color: #fff; }
 .label { flex: 1; font-size: 14px; line-height: 1.4; }
@@ -378,6 +380,8 @@ body {
 .detail-name { font-size: 14px; }
 .detail-name.done { text-decoration: line-through; color: #666; }
 .detail-note { display: block; font-size: 11px; color: #666; margin-top: 2px; font-weight: 400; }
+.guide-entry { flex: 1; padding: 9px 0; border-radius: 12px; border: 1px solid #26332a; background: #141a16; color: #9ccc9c; font-size: 13px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.guide-entry:active { background: #1b241d; }
 .detail-name.done .detail-note { text-decoration: none; }
 .toast-btn { margin-left: 12px; padding: 4px 12px; border-radius: 10px; border: 1px solid #4caf50; background: transparent; color: #a5d6a7; font-size: 13px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .check-item:focus-visible { outline: 2px solid #4caf50; outline-offset: 2px; }
@@ -529,7 +533,7 @@ body.light .note-peek.empty { color: #8a9199; }
     <button onclick="shiftWeek(1)" aria-label="下一周">›</button>
   </div>
   <div class="week-bar" id="weekBar"></div>
-  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div><span class="progress-pct" id="progressPct">0%</span></div>
 </div>
 
 <div id="historyBanner"></div>
@@ -640,7 +644,7 @@ let activeTab = 'routine';
 let activeTimers = {};
 let viewingRecordDate = null;
 let lastDayKey = todayStr();
-const APP_VERSION = 'v13';
+const APP_VERSION = 'v14';
 const APP_KEY_RE = /^(\d{4}-\d{2}-\d{2}(_timer|_steps)?|restock_data|skincare_notes|skincare_skin|skincare_routine|skincare_reminder|skincare_theme)$/;
 
 /* ====== 日期工具 ====== */
@@ -1190,9 +1194,9 @@ function renderRoutine() {
   }
 
   if (isToday) {
-    html += `<div style="display:flex;gap:8px;margin:12px 16px 0;">
-      <button class="set-btn" style="flex:1;padding:12px 0;font-size:14px;" onclick="startGuide('morning')">☀️ 开始早间引导</button>
-      <button class="set-btn" style="flex:1;padding:12px 0;font-size:14px;" onclick="startGuide('evening')">🌙 开始晚间引导</button>
+    html += `<div style="display:flex;gap:8px;margin:10px 16px 0;">
+      <button class="guide-entry" onclick="startGuide('morning')">☀️ 早间引导</button>
+      <button class="guide-entry" onclick="startGuide('evening')">🌙 晚间引导</button>
     </div>`;
   }
 
@@ -1259,6 +1263,8 @@ function updateProgress() {
   const done = document.querySelectorAll('.check-item.done').length;
   const pct = total ? Math.round(done / total * 100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
+  const pctEl = document.getElementById('progressPct');
+  if (pctEl) pctEl.textContent = pct + '%';
 
   const mDone = document.querySelectorAll('.check-item.done[data-id^="m_"]').length;
   const eDone = document.querySelectorAll('.check-item.done[data-id^="e_"]').length;
