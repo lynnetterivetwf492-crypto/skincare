@@ -522,14 +522,14 @@ body.light .toast-btn { color: #2e7d32; }
 const dayNames = ['周日','周一','周二','周三','周四','周五','周六'];
 const dayShort = ['日','一','二','三','四','五','六'];
 const dayTypes = {
-  0: { text: '休息日', class: 'rest' },
+  0: { text: '修复日', class: 'rest' },
   1: { text: 'A醇日', class: 'active' },
   2: { text: '水杨酸日', class: 'exfol' },
-  3: { text: '休息日', class: 'rest' },
+  3: { text: '修复日', class: 'rest' },
   4: { text: 'A醇日', class: 'active' },
-  5: { text: '泥膜+A醇', class: 'mild' },
-  6: { text: '休息日', class: 'rest' }
-};
+  5: { text: '清洁日', class: 'mild' },
+  6: { text: 'A醇日', class: 'active' }
+};;
 
 const routines = {
   morning: [
@@ -539,64 +539,55 @@ const routines = {
     { name: '防晒', note: '欧莱雅小金管，必涂' }
   ],
   evening: {
-    0: [ // 周日 A醇+阿达帕林
+    0: [
       { name: '洁面', note: '洗面奶' },
-      { name: '阿达帕林', note: '薄涂下巴闭口区，只涂下巴', tag: 'adapalene', tagText: '下巴' },
-      { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
-      { name: '修丽可色修', note: '舒缓打底' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
-      { name: '蓝管A醇', note: '全脸涂，等脸干再涂', tag: 'retinol', tagText: 'A醇' },
       { name: 'B5修复霜', note: '薄涂一层' }
     ],
-    1: [ // 周一 A醇+阿达帕林
+    1:     [
       { name: '洁面', note: '洗面奶' },
-      { name: '阿达帕林', note: '薄涂下巴闭口区，只涂下巴', tag: 'adapalene', tagText: '下巴' },
+      { name: '阿达帕林', note: '薄涂下巴，只涂下巴', tag: 'adapalene', tagText: '下巴' },
       { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
-      { name: '修丽可色修', note: '舒缓打底' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
-      { name: '蓝管A醇', note: '全脸涂，等脸干再涂', tag: 'retinol', tagText: 'A醇' },
+      { name: '蓝管A醇', note: '全脸涂，避开下巴和眼周', tag: 'retinol', tagText: 'A醇' },
       { name: 'B5修复霜', note: '薄涂一层' }
     ],
-    2: [ // 周二 水杨酸
+    2: [
       { name: '洁面', note: '洗面奶' },
-      { name: '水杨酸棉片', note: 'Stridex绿罐，擦T区+敷鼻头30s-1min，别碰下巴', tag: 'bha', tagText: 'T区' },
+      { name: '水杨酸棉片', note: 'Stridex绿罐，擦T区+敷鼻头30s-1min', tag: 'bha', tagText: 'T区' },
       { name: '等待吸收', note: '水杨酸吸收后再涂下一步', timer: 90, timerLabel: '90s' },
-      { name: '修丽可色修', note: '舒缓打底' },
+      { name: 'B5修复霜', note: '薄涂一层' }
+    ],
+    3: [
+      { name: '洁面', note: '洗面奶' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
       { name: 'B5修复霜', note: '薄涂一层' }
     ],
-    3: [ // 周三 休息
+    4:     [
       { name: '洁面', note: '洗面奶' },
-      { name: '修丽可色修', note: '舒缓打底' },
-      { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
-      { name: 'B5修复霜', note: '薄涂一层' }
-    ],
-    4: [ // 周四 A醇+阿达帕林
-      { name: '洁面', note: '洗面奶' },
-      { name: '阿达帕林', note: '薄涂下巴闭口区，只涂下巴', tag: 'adapalene', tagText: '下巴' },
+      { name: '阿达帕林', note: '薄涂下巴，只涂下巴', tag: 'adapalene', tagText: '下巴' },
       { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
-      { name: '修丽可色修', note: '舒缓打底' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
-      { name: '蓝管A醇', note: '全脸涂，等脸干再涂', tag: 'retinol', tagText: 'A醇' },
+      { name: '蓝管A醇', note: '全脸涂，避开下巴和眼周', tag: 'retinol', tagText: 'A醇' },
       { name: 'B5修复霜', note: '薄涂一层' }
     ],
-    5: [ // 周五 泥膜+A醇
+    5: [
       { name: '洁面', note: '洗面奶' },
       { name: '泥膜敷T区', note: '只敷T区，别碰两颊', timer: 420, timerLabel: '7min', tag: 'mask', tagText: 'T区' },
       { name: '洗掉泥膜', note: '温水洗干净' },
-      { name: '修丽可色修', note: '舒缓打底' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
-      { name: '蓝管A醇', note: '全脸涂，等脸干再涂', tag: 'retinol', tagText: 'A醇' },
       { name: 'B5修复霜', note: '薄涂一层' }
     ],
-    6: [ // 周六 休息
+    6:     [
       { name: '洁面', note: '洗面奶' },
-      { name: '修丽可色修', note: '舒缓打底' },
+      { name: '阿达帕林', note: '薄涂下巴，只涂下巴', tag: 'adapalene', tagText: '下巴' },
+      { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: '蓝管A醇', note: '全脸涂，避开下巴和眼周', tag: 'retinol', tagText: 'A醇' },
       { name: 'B5修复霜', note: '薄涂一层' }
     ]
   }
-};
+};;;
 
 /* ====== STATE ====== */
 let selectedDate = todayStr();
@@ -605,7 +596,7 @@ let activeTab = 'routine';
 let activeTimers = {};
 let viewingRecordDate = null;
 let lastDayKey = todayStr();
-const APP_KEY_RE = /^(\d{4}-\d{2}-\d{2}(_timer)?|restock_data|skincare_notes)$/;
+const APP_KEY_RE = /^(\d{4}-\d{2}-\d{2}(_timer|_steps)?|restock_data|skincare_notes|skincare_skin|skincare_routine|skincare_reminder|skincare_theme)$/;
 
 /* ====== 日期工具 ====== */
 function todayStr() {
@@ -702,7 +693,6 @@ const STEP_TO_PRODUCT = {
   'HBN发光水': 'HBN发光水',
   '乐敦CC': '乐敦CC',
   '防晒': '欧莱雅防晒',
-  '修丽可色修': '修丽可色修',
   'OLAY小白瓶': 'OLAY小白瓶',
   '蓝管A醇': '蓝管A醇',
   'B5修复霜': 'B5修复霜',
@@ -716,7 +706,6 @@ const DEFAULT_RESTOCK = [
   { name: 'HBN发光水', status: 'ok', usageCount: 0, usageHistory: [] },
   { name: '乐敦CC', status: 'ok', usageCount: 0, usageHistory: [] },
   { name: '欧莱雅防晒', status: 'ok', usageCount: 0, usageHistory: [] },
-  { name: '修丽可色修', status: 'ok', usageCount: 0, usageHistory: [] },
   { name: 'OLAY小白瓶', status: 'ok', usageCount: 0, usageHistory: [] },
   { name: '蓝管A醇', status: 'ok', usageCount: 0, usageHistory: [] },
   { name: 'B5修复霜', status: 'ok', usageCount: 0, usageHistory: [] },
@@ -744,6 +733,10 @@ function getRestockData() {
       if (!obj.status) { obj.status = 'ok'; needSave = true; }
       if (obj.name === '泥膜') { obj.name = '红之植酸泥膜'; needSave = true; }
       return obj;
+    }).filter(item => {
+      // 色修已从流程中移除，清掉历史残留条目
+      if (item.name === '修丽可色修') { needSave = true; return false; }
+      return true;
     });
     if (needSave) localStorage.setItem('restock_data', JSON.stringify(migrated));
     return migrated;
@@ -781,7 +774,8 @@ function autoUntrackUsage(stepName) {
 }
 
 /* ====== 当前日期的流程项 ====== */
-function itemsOf(dateKey) {
+// 按"当前流程"生成步骤
+function itemsOfRaw(dateKey) {
   const cfg = getRoutine();
   const dow = parseDate(dateKey).getDay();
   const evening = cfg.evening[dow] || [];
@@ -789,6 +783,36 @@ function itemsOf(dateKey) {
   cfg.morning.forEach((item, i) => list.push({ id: 'm_' + i, item }));
   evening.forEach((item, i) => list.push({ id: 'e_' + i, item }));
   return list;
+}
+
+// 每天的流程快照：打卡当天记下步骤结构，之后改流程也不会让历史记录错位
+function stepsKey(dateKey) { return dateKey + '_steps'; }
+function getDaySteps(dateKey) {
+  try {
+    const raw = localStorage.getItem(stepsKey(dateKey));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+function saveDaySteps(dateKey) {
+  const key = stepsKey(dateKey);
+  try { if (localStorage.getItem(key)) return; } catch (e) {}
+  const map = {};
+  itemsOfRaw(dateKey).forEach(({ id, item }) => {
+    map[id] = { name: item.name, note: item.note || '', tag: item.tag || '', tagText: item.tagText || '' };
+  });
+  try { localStorage.setItem(key, JSON.stringify(map)); } catch (e) {}
+}
+
+// 优先用当天快照，没有才退回当前流程
+function itemsOf(dateKey) {
+  const snap = getDaySteps(dateKey);
+  if (!snap) return itemsOfRaw(dateKey);
+  const ids = Object.keys(snap).sort((a, b) => {
+    const pa = a[0] === 'm' ? 0 : 1, pb = b[0] === 'm' ? 0 : 1;
+    if (pa !== pb) return pa - pb;
+    return parseInt(a.slice(2), 10) - parseInt(b.slice(2), 10);
+  });
+  return ids.map(id => ({ id, item: snap[id] }));
 }
 function findItem(dateKey, id) {
   return itemsOf(dateKey).find(x => x.id === id) || null;
@@ -1026,6 +1050,9 @@ function renderRoutine() {
   const cfg = getRoutine();
   const dow = parseDate(selectedDate).getDay();
   const evening = cfg.evening[dow] || [];
+  const pairs = itemsOf(selectedDate);
+  const morningPairs = pairs.filter(x => x.id[0] === 'm');
+  const eveningPairs = pairs.filter(x => x.id[0] === 'e');
   const data = readDay(selectedDate);
 
   document.getElementById('dateText').textContent = formatDateCN(selectedDate);
@@ -1084,12 +1111,12 @@ function renderRoutine() {
 
   html += '<div class="section">';
   html += '<div class="section-title"><span class="icon">☀️</span> 早间护肤 <span class="count" id="morningCount"></span></div>';
-  cfg.morning.forEach((item, i) => { html += renderItem('m_' + i, item, !!data['m_' + i], !isToday); });
+  morningPairs.forEach(({ id, item }) => { html += renderItem(id, item, !!data[id], !isToday); });
   html += '</div>';
 
   html += '<div class="section">';
   html += '<div class="section-title"><span class="icon">🌙</span> 晚间护肤 <span class="count" id="eveningCount"></span></div>';
-  evening.forEach((item, i) => { html += renderItem('e_' + i, item, !!data['e_' + i], !isToday); });
+  eveningPairs.forEach(({ id, item }) => { html += renderItem(id, item, !!data[id], !isToday); });
   html += '</div>';
 
   html += skinSummaryHtml();
@@ -1139,10 +1166,9 @@ function renderItem(id, item, checked, readOnly) {
 }
 
 function updateProgress() {
-  const cfg = getRoutine();
-  const dow = parseDate(selectedDate).getDay();
-  const evening = cfg.evening[dow] || [];
-  const total = cfg.morning.length + evening.length;
+  const total = document.querySelectorAll('.check-item').length;
+  const morningTotal = document.querySelectorAll('.check-item[data-id^="m_"]').length;
+  const eveningTotal = total - morningTotal;
   const done = document.querySelectorAll('.check-item.done').length;
   const pct = total ? Math.round(done / total * 100) : 0;
   document.getElementById('progressFill').style.width = pct + '%';
@@ -1151,14 +1177,15 @@ function updateProgress() {
   const eDone = document.querySelectorAll('.check-item.done[data-id^="e_"]').length;
   const mc = document.getElementById('morningCount');
   const ec = document.getElementById('eveningCount');
-  if (mc) mc.textContent = `${mDone}/${cfg.morning.length}`;
-  if (ec) ec.textContent = `${eDone}/${evening.length}`;
+  if (mc) mc.textContent = `${mDone}/${morningTotal}`;
+  if (ec) ec.textContent = `${eDone}/${eveningTotal}`;
   document.getElementById('completeMsg').classList.toggle('show', total > 0 && done === total);
 }
 
 /* ====== 点击委托：打卡项 / 计时器 / 说明 ====== */
 function toggleItem(id) {
   if (selectedDate !== todayStr()) return;
+  saveDaySteps(selectedDate); // 首次打卡记录当天的流程结构
   const found = findItem(selectedDate, id);
   if (!found) return;
   const on = !getCheckState(selectedDate, id);
@@ -1595,7 +1622,7 @@ const REMIND_KEY = 'skincare_reminder';
 const THEME_KEY = 'skincare_theme';
 const SKIN_TAGS = ['泛红', '爆痘', '干燥', '闭口变少', '出油多', '状态稳定'];
 // 备份/快照覆盖的 key（比导出白名单多几个配置项）
-const BACKUP_RE = /^(\d{4}-\d{2}-\d{2}(_timer)?|restock_data|skincare_notes|skincare_skin|skincare_routine|skincare_reminder|skincare_theme)$/;
+const BACKUP_RE = /^(\d{4}-\d{2}-\d{2}(_timer|_steps)?|restock_data|skincare_notes|skincare_skin|skincare_routine|skincare_reminder|skincare_theme)$/;
 
 /* ---- 主题 ---- */
 function applyTheme(t) {
