@@ -362,8 +362,12 @@ body {
 .detail-check.on { background: #4caf50; border-color: #4caf50; color: #fff; }
 .detail-name { font-size: 14px; }
 .detail-name.done { text-decoration: line-through; color: #666; }
+.detail-note { display: block; font-size: 11px; color: #666; margin-top: 2px; font-weight: 400; }
+.detail-name.done .detail-note { text-decoration: none; }
 .toast-btn { margin-left: 12px; padding: 4px 12px; border-radius: 10px; border: 1px solid #4caf50; background: transparent; color: #a5d6a7; font-size: 13px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .check-item:focus-visible { outline: 2px solid #4caf50; outline-offset: 2px; }
+.check-item.readonly { cursor: default; }
+.check-item.readonly .checkbox { opacity: 0.6; }
 
 /* ================= 新增样式 ================= */
 /* 引导模式 */
@@ -915,7 +919,7 @@ function renderRecordDetail(dateKey) {
       const done = !!data[id];
       s += `<div class="detail-row${done ? ' done' : ''}">
         <span class="detail-check${done ? ' on' : ''}">${done ? '✓' : ''}</span>
-        <span class="detail-name${done ? ' done' : ''}">${escapeHtml(item.name)}</span>
+        <span class="detail-name${done ? ' done' : ''}">${escapeHtml(item.name)}${item.note ? `<span class="detail-note">${escapeHtml(item.note)}</span>` : ''}</span>
         ${item.tag ? `<span class="tag ${item.tag}" style="margin-left:8px;">${escapeHtml(item.tagText)}</span>` : ''}
       </div>`;
     });
@@ -1158,7 +1162,7 @@ function renderItem(id, item, checked, readOnly) {
     ? `<div class="note-toggle"><span class="arrow">▶</span> 说明</div><div class="note-content">${escapeHtml(item.note)}</div>`
     : '';
 
-  return `<div class="check-item${checked ? ' done' : ''}" data-id="${id}" role="checkbox" aria-checked="${checked}" tabindex="0"${readOnly ? ' style="pointer-events:none"' : ''}>
+  return `<div class="check-item${checked ? ' done' : ''}${readOnly ? ' readonly' : ''}" data-id="${id}" role="checkbox" aria-checked="${checked}" tabindex="0">
     <div class="checkbox">${checked ? '✓' : ''}</div>
     <div class="label">${escapeHtml(item.name)}${noteHtml}</div>
     ${tagHtml}${timerHtml}
