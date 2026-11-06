@@ -24,6 +24,11 @@ body {
 /* Header */
 .header { padding: 20px 16px 10px; position: sticky; top: 0; background: #0f0f0f; z-index: 10; }
 .header h1 { font-size: 22px; font-weight: 700; color: #c8e6c9; display: flex; align-items: center; gap: 8px; }
+.header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.header-left { min-width: 0; flex: 1; }
+.note-peek { max-width: 46%; max-height: 78px; overflow: hidden; background: #161616; border: 1px solid #242424; border-left-width: 3px; border-radius: 12px; padding: 8px 10px; font-size: 11px; color: #b8b8b8; line-height: 1.55; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+.note-peek .np-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+.note-peek.empty { color: #666; text-align: center; display: flex; align-items: center; justify-content: center; min-height: 44px; }
 .date { font-size: 13px; color: #888; margin-top: 4px; }
 .day-badge { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
 .day-badge.rest { background: #2a2a2a; color: #999; }
@@ -339,6 +344,9 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 .note-card .note-delete:active { background: rgba(0,0,0,0.1); }
+.note-card .note-pin { background: none; border: none; font-size: 14px; cursor: pointer; opacity: 0.35; padding: 2px 6px; border-radius: 6px; -webkit-tap-highlight-color: transparent; }
+.note-card .note-pin.on { opacity: 1; }
+.note-card .note-pin:active { background: rgba(0,0,0,0.1); }
 .note-color-picker {
   display: flex;
   gap: 8px;
@@ -499,15 +507,22 @@ body.light .set-summary { color: #1b1f24; }
 body.light .step-btns .mv { background: #eaeef3; border-color: #dde3ea; color: #5a636d; }
 body.light .step-extra .ex { color: #6b7480; }
 body.light .check-item.readonly { opacity: 0.85; }
+body.light .note-peek { background: #fff; border-color: #e3e7ec; color: #4a555f; }
+body.light .note-peek.empty { color: #8a9199; }
 
 </style>
 </head>
 <body>
 
 <div class="header">
-  <h1>🌿 护肤打卡</h1>
-  <div class="date" id="dateText"></div>
-  <div class="day-badge" id="dayBadge"></div>
+  <div class="header-row">
+    <div class="header-left">
+      <h1>🌿 护肤打卡</h1>
+      <div class="date" id="dateText"></div>
+      <div class="day-badge" id="dayBadge"></div>
+    </div>
+    <div class="note-peek" id="notePeek" onclick="switchTab('notes')"></div>
+  </div>
   <div class="date-nav">
     <button onclick="shiftWeek(-1)" aria-label="上一周">‹</button>
     <span class="month-label" id="monthLabel"></span>
@@ -625,7 +640,7 @@ let activeTab = 'routine';
 let activeTimers = {};
 let viewingRecordDate = null;
 let lastDayKey = todayStr();
-const APP_VERSION = 'v11';
+const APP_VERSION = 'v13';
 const APP_KEY_RE = /^(\d{4}-\d{2}-\d{2}(_timer|_steps)?|restock_data|skincare_notes|skincare_skin|skincare_routine|skincare_reminder|skincare_theme)$/;
 
 /* ====== 日期工具 ====== */
@@ -1133,6 +1148,7 @@ function renderRoutine() {
   badgeEl.className = 'day-badge ' + badge.class;
 
   renderWeekBar();
+  renderNotePeek();
 
   const ws = weekStart;
   const we = new Date(ws.getTime());
@@ -1303,6 +1319,24 @@ document.addEventListener('keydown', e => {
 });
 
 /* ====== 周条 ====== */
+// 标题右侧的便签预览
+function renderNotePeek() {
+  const el = document.getElementById('notePeek');
+  if (!el) return;
+  const notes = getNotes();
+  if (!notes.length) {
+    el.className = 'note-peek empty';
+    el.style.borderLeftColor = '#333';
+    el.innerHTML = '📝<br>便签';
+    return;
+  }
+  const n = notes.find(x => x.pinned) || notes[0];
+  const colorObj = NOTE_COLORS.find(c => c.name === n.color) || NOTE_COLORS[0];
+  el.className = 'note-peek';
+  el.style.borderLeftColor = colorObj.border;
+  el.innerHTML = `<div class="np-text">${escapeHtml(n.content)}</div>`;
+}
+
 function renderWeekBar() {
   const ws = new Date(weekStart.getTime());
   let html = '';
@@ -1620,6 +1654,7 @@ function renderNotes() {
         html += `<div class="note-color-dot${sel ? ' selected' : ''}" style="background:${c.bg};border-color:${sel ? 'rgba(0,0,0,0.5)' : c.border}" onclick="changeNoteColor('${escapeHtml(note.id)}','${c.name}')"></div>`;
       });
       html += '</div>';
+      html += `<button class="note-pin${note.pinned ? ' on' : ''}" onclick="toggleNotePin('${escapeHtml(note.id)}')" title="显示在首页">📌</button>`;
       html += `<button class="note-delete" onclick="deleteNote('${escapeHtml(note.id)}')">✕</button>`;
       html += '</div></div>';
     });
@@ -1657,6 +1692,19 @@ function updateNoteText(id, text) {
   if (note.content === content) return;
   note.content = content;
   saveNotes(notes);
+}
+
+// 设为/取消"显示在首页"（同一时间只保留一条）
+function toggleNotePin(id) {
+  const notes = getNotes();
+  const note = notes.find(n => n.id === id);
+  if (!note) return;
+  const turningOn = !note.pinned;
+  notes.forEach(n => { n.pinned = false; });
+  if (turningOn) note.pinned = true;
+  saveNotes(notes);
+  renderNotes();
+  showToast(turningOn ? '已设为首页显示' : '已取消首页显示');
 }
 
 function deleteNote(id) {
