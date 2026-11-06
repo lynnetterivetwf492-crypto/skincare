@@ -118,7 +118,11 @@ body {
   padding: 4px 0;
 }
 .tab-item .tab-icon { font-size: 20px; }
+.tab-item { position: relative; transition: color 0.2s; }
+.tab-item .tab-icon { transition: transform 0.2s; }
 .tab-item.active { color: #c8e6c9; }
+.tab-item.active .tab-icon { transform: translateY(-1px) scale(1.1); }
+.tab-item.active::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 18px; height: 2.5px; border-radius: 0 0 3px 3px; background: #66bb6a; }
 
 /* Records tab */
 .records-wrap { padding: 16px; }
@@ -180,6 +184,8 @@ body {
   width: 100%;
 }
 .restock-open-btn:active { background: #1a1a2a; }
+.restock-del { background: none; border: 1px solid #333; color: #a55; width: 27px; height: 27px; border-radius: 8px; font-size: 12px; cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+.restock-del:active { background: #2a1a1a; }
 .restock-history { margin-top: 6px; font-size: 11px; color: #666; }
 
 /* History view overlay */
@@ -215,7 +221,8 @@ body {
 .check-item.just-checked .checkbox { animation: checkBounce 0.4s ease; }
 
 /* Collapsible note */
-.note-toggle { font-size: 11px; color: #555; margin-top: 2px; cursor: pointer; display: flex; align-items: center; gap: 3px; }
+.note-toggle { font-size: 11px; color: #5a6a5e; cursor: pointer; display: inline-flex; align-items: center; gap: 2px; margin-left: 6px; padding: 1px 6px; border-radius: 8px; background: #1a1f1c; vertical-align: middle; -webkit-tap-highlight-color: transparent; }
+.note-toggle:active { background: #232a26; }
 .note-toggle .arrow { transition: transform 0.2s; display: inline-block; font-size: 9px; }
 .note-toggle .arrow.open { transform: rotate(90deg); }
 .note-content { font-size: 11px; color: #666; margin-top: 2px; overflow: hidden; transition: max-height 0.25s ease, opacity 0.2s; max-height: 0; opacity: 0; }
@@ -418,6 +425,12 @@ body {
 /* 设置 */
 .settings { padding: 16px; }
 .settings h2 { font-size: 16px; color: #c8e6c9; margin-bottom: 12px; }
+.set-summary { padding: 14px 0; cursor: pointer; list-style: none; font-size: 14px; color: #ddd; display: flex; align-items: baseline; gap: 8px; -webkit-tap-highlight-color: transparent; }
+.set-summary::-webkit-details-marker { display: none; }
+.set-summary::marker { content: ''; }
+.set-summary::after { content: '⌄'; margin-left: auto; color: #666; font-size: 14px; transition: transform 0.2s; }
+details[open] > .set-summary::after { transform: rotate(180deg); }
+.section, .skin-card, .set-group, .record-card { border-radius: 16px; }
 .set-group { background: #161616; border: 1px solid #222; border-radius: 14px; padding: 6px 14px; margin-bottom: 12px; }
 .set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid #1f1f1f; font-size: 14px; color: #ddd; }
 .set-row:last-child { border-bottom: none; }
@@ -428,7 +441,12 @@ body {
 .seg { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 2px; }
 .seg button { flex: 0 0 auto; padding: 7px 14px; border-radius: 16px; border: 1px solid #2a2a2a; background: #141414; color: #888; font-size: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .seg button.on { background: #1a2a1a; border-color: #4caf50; color: #a5d6a7; }
-.step-edit { display: flex; gap: 8px; align-items: center; padding: 9px 0; border-bottom: 1px solid #1f1f1f; }
+.step-edit { display: flex; flex-direction: column; padding: 10px 0; border-bottom: 1px solid #1f1f1f; }
+.step-main { display: flex; gap: 8px; align-items: center; }
+.step-extra { display: flex; gap: 10px; margin-top: 6px; }
+.step-extra .ex { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #777; }
+.step-extra input.sec { width: 74px; background: #101010; border: 1px solid #242424; border-radius: 8px; color: #ddd; padding: 5px 7px; font-size: 12px; font-family: inherit; }
+.step-extra select.tag { background: #101010; border: 1px solid #242424; border-radius: 8px; color: #ddd; padding: 5px 7px; font-size: 12px; font-family: inherit; }
 .step-edit input { background: #101010; border: 1px solid #242424; border-radius: 8px; color: #ddd; padding: 8px; font-size: 13px; font-family: inherit; }
 .step-edit input.name { flex: 1.15; min-width: 0; }
 .step-edit input.meta { flex: 1; min-width: 0; }
@@ -469,11 +487,18 @@ body.light .seg button { background: #eaeef3; border-color: #dde3ea; color: #6b7
 body.light .set-btn { background: #eaeef3; border-color: #dde3ea; color: #5a636d; }
 body.light .spark .bar { background: #cfe3d6; }
 body.light .spark .bar.hi { background: #4caf50; }
-body.light .step-edit input { background: #f4f6f8; border-color: #dde3ea; color: #1b1f24; }
+body.light .step-edit input, body.light .step-extra input.sec, body.light .step-extra select.tag { background: #f4f6f8; border-color: #dde3ea; color: #1b1f24; }
 body.light .overlay .sheet { background: #fff; }
 body.light .restock-status.s-ok { background: #e6f4ea; }
 body.light .history-banner { background: #e6f4ea; border-color: #c9e3d2; color: #1f7a3a; }
 body.light .toast-btn { color: #2e7d32; }
+body.light .note-toggle { background: #e9eef3; color: #6b7480; }
+body.light .note-toggle:active { background: #dde3ea; }
+body.light .restock-del { border-color: #dde3ea; }
+body.light .set-summary { color: #1b1f24; }
+body.light .step-btns .mv { background: #eaeef3; border-color: #dde3ea; color: #5a636d; }
+body.light .step-extra .ex { color: #6b7480; }
+body.light .check-item.readonly { opacity: 0.85; }
 
 </style>
 </head>
@@ -875,7 +900,7 @@ function renderRecords() {
   if (viewingRecordDate) { renderRecordDetail(viewingRecordDate); return; }
 
   const dates = recordDates();
-  let html = trendBlockHtml() + '<div class="records-wrap"><h2>📊 打卡记录</h2>';
+  let html = weeklySummaryHtml() + trendBlockHtml() + '<div class="records-wrap"><h2>📊 打卡记录</h2>';
   if (dates.length === 0) {
     html += '<div class="record-empty">还没有打卡记录<br>开始今天的护肤吧！</div>';
   } else {
@@ -928,6 +953,22 @@ function renderRecordDetail(dateKey) {
   html += section('早间护肤', list.filter(x => x.id[0] === 'm'), '☀️');
   html += section('晚间护肤', list.filter(x => x.id[0] === 'e'), '🌙');
 
+  // 皮肤状态（可补记）
+  const skin = getSkin(dateKey);
+  html += '<div class="detail-section">🫧 皮肤状态</div>';
+  if (skin) {
+    const tagsTxt = (skin.tags && skin.tags.length) ? ' · ' + skin.tags.join('、') : '';
+    html += `<div class="detail-row">
+      <span class="detail-name">${skin.score ? skin.score + ' 分' : '未评分'}${escapeHtml(tagsTxt)}${skin.note ? `<span class="detail-note">${escapeHtml(skin.note)}</span>` : ''}</span>
+      <button class="set-btn" onclick="editSkinFor('${dateKey}')">修改</button>
+    </div>`;
+  } else {
+    html += `<div class="detail-row">
+      <span class="detail-name" style="color:#666;">这一天还没记录</span>
+      <button class="set-btn" onclick="editSkinFor('${dateKey}')">补记</button>
+    </div>`;
+  }
+
   const p = dayProgress(dateKey);
   const pct = p.total ? Math.round(p.done / p.total * 100) : 0;
   html += `<div style="text-align:center;margin-top:24px;font-size:14px;color:${pct === 100 ? '#4caf50' : '#ffa726'}">${pct === 100 ? '✨ 全部完成！' : `完成 ${p.done}/${p.total} (${pct}%)`}</div>`;
@@ -977,13 +1018,17 @@ function renderRestock() {
     html += `<div class="restock-item ${STATUS_ITEM_CLASS[item.status] || ''}">
       <div class="restock-top">
         <span class="restock-name">${safeName}</span>
-        <button class="restock-status ${STATUS_CLASS[item.status] || 's-ok'}" data-status="${safeName}">${STATUS_LABEL[item.status] || '充足'}</button>
+        <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          <button class="restock-status ${STATUS_CLASS[item.status] || 's-ok'}" data-status="${safeName}">${STATUS_LABEL[item.status] || '充足'}</button>
+          <button class="restock-del" data-del="${safeName}" aria-label="删除">✕</button>
+        </span>
       </div>
       <div class="restock-hint">${STATUS_HINT[item.status] || ''}</div>
       ${meta}${history}${openBtn}
     </div>`;
   });
   html += '</div>';
+  html += `<button class="restock-open-btn" style="margin:0 0 12px;" onclick="addRestockProduct()">＋ 添加产品</button>`;
   html += `<div class="backup-bar">
     <button class="backup-btn" onclick="exportData()">📤 导出数据</button>
     <button class="backup-btn" onclick="importData()">📥 导入数据</button>
@@ -997,6 +1042,8 @@ document.addEventListener('click', e => {
   if (statusBtn) { cycleRestockStatus(statusBtn.dataset.status); return; }
   const openBtn = e.target.closest('[data-open]');
   if (openBtn) { openNewProduct(openBtn.dataset.open); return; }
+  const delBtn = e.target.closest('[data-del]');
+  if (delBtn) { removeRestockProduct(delBtn.dataset.del); return; }
 });
 
 function cycleRestockStatus(name) {
@@ -1031,6 +1078,25 @@ function cycleRestockStatus(name) {
   saveRestockData(data);
   renderRestock();
   showToast(`${item.name} → ${STATUS_LABEL[next]}`);
+}
+
+function addRestockProduct() {
+  const name = (prompt('产品名称（比如：某某精华）') || '').trim();
+  if (!name) return;
+  const data = getRestockData();
+  if (data.some(d => d.name === name)) { showToast('已经有这个产品了'); return; }
+  data.push({ name: name, status: 'ok', usageCount: 0, usageHistory: [] });
+  saveRestockData(data);
+  renderRestock();
+  showToast('已添加：' + name);
+}
+
+function removeRestockProduct(name) {
+  if (!confirm('删除「' + name + '」？\n它的使用次数和开封日期会一起删掉。')) return;
+  const data = getRestockData().filter(d => d.name !== name);
+  saveRestockData(data);
+  renderRestock();
+  showToast('已删除：' + name);
 }
 
 function openNewProduct(name) {
@@ -1159,7 +1225,7 @@ function renderItem(id, item, checked, readOnly) {
   }
 
   const noteHtml = item.note
-    ? `<div class="note-toggle"><span class="arrow">▶</span> 说明</div><div class="note-content">${escapeHtml(item.note)}</div>`
+    ? `<span class="note-toggle"><span class="arrow">▸</span>说明</span><div class="note-content">${escapeHtml(item.note)}</div>`
     : '';
 
   return `<div class="check-item${checked ? ' done' : ''}${readOnly ? ' readonly' : ''}" data-id="${id}" role="checkbox" aria-checked="${checked}" tabindex="0">
@@ -1760,6 +1826,21 @@ function requestReminderPermission() {
 
 /* ---- 设置页 ---- */
 let settingsGroup = 'morning';
+const TAG_OPTIONS = [
+  { value: '', label: '无标签' },
+  { value: 'retinol', label: 'A醇' },
+  { value: 'adapalene', label: '下巴' },
+  { value: 'bha', label: 'T区/酸' },
+  { value: 'bright', label: '美白' },
+  { value: 'mask', label: '泥膜' },
+  { value: 'azelaic', label: '壬二酸' }
+];
+const TAG_LABEL = { retinol: 'A醇', adapalene: '下巴', bha: 'T区', bright: '美白', mask: 'T区', azelaic: '壬二酸' };
+function timerLabelOf(sec) {
+  sec = parseInt(sec, 10);
+  if (sec < 60) return sec + 's';
+  return Math.round(sec / 60) + 'min';
+}
 
 function renderSettings() {
   const content = document.getElementById('content');
@@ -1782,8 +1863,9 @@ function renderSettings() {
   </div>`;
 
   // 流程编辑
-  html += `<div class="set-group" style="padding:14px;">
-    <div class="set-row" style="border:none;padding-bottom:8px;"><div><div>护肤流程</div><div class="sub">改完会影响打卡项，历史记录不受影响</div></div></div>
+  html += `<details class="set-group" style="padding:0 14px;" open>
+    <summary class="set-summary">护肤流程<span class="sub">点开编辑</span></summary>
+    <div style="padding-bottom:14px;">
     <div class="seg">${groupTabsHTML()}</div>
     <div id="stepList">${stepsEditorHTML(cfg)}</div>
     <div style="display:flex;gap:8px;margin-top:12px;">
@@ -1791,10 +1873,13 @@ function renderSettings() {
       <button class="set-btn" style="flex:1" onclick="saveSteps()">💾 保存</button>
     </div>
     <div style="margin-top:10px;"><button class="set-btn warn" style="width:100%" onclick="restoreDefaultRoutine()">恢复默认流程</button></div>
-  </div>`;
+    </div>
+  </details>`;
 
   // 备份
-  html += `<div class="set-group">
+  html += `<details class="set-group" style="padding:0 14px;">
+    <summary class="set-summary">备份与恢复<span class="sub">快照 / 导出 / 导入</span></summary>
+    <div style="padding-bottom:10px;">
     <div class="set-row"><div><div>立即备份</div><div class="sub">已保存 ${snaps.length} 份自动快照（最近 7 天）</div></div>
       <button class="set-btn" onclick="takeSnapshot(true);showToast('已备份');renderSettings()">备份</button></div>
     ${snaps.length ? `<div class="set-row"><div><div>恢复快照</div><div class="sub">${snaps.map(s => s.day).join(' · ')}</div></div>
@@ -1803,7 +1888,8 @@ function renderSettings() {
       <button class="set-btn" onclick="exportData()">导出</button></div>
     <div class="set-row"><div><div>导入文件</div><div class="sub">会覆盖同名的数据</div></div>
       <button class="set-btn" onclick="importData()">导入</button></div>
-  </div>`;
+    </div>
+  </details>`;
 
   html += '</div>';
   content.innerHTML = html;
@@ -1830,15 +1916,21 @@ function currentSteps() {
 function stepsEditorHTML(cfg) {
   const list = settingsGroup === 'morning' ? cfg.morning : (cfg.evening[settingsGroup] || []);
   if (!list.length) return '<div class="sub" style="padding:8px 0;">这一组还没有步骤</div>';
-  return list.map((s, i) => `<div class="step-edit" data-idx="${i}"
-      data-tag="${escapeHtml(s.tag || '')}" data-tagtext="${escapeHtml(s.tagText || '')}"
-      data-timer="${s.timer || ''}" data-timerlabel="${escapeHtml(s.timerLabel || '')}">
-      <input class="name" value="${escapeHtml(s.name)}" placeholder="步骤名">
-      <input class="meta" value="${escapeHtml(s.note || '')}" placeholder="说明（可选）">
-      <div class="step-btns">
-        <button class="mv" onclick="moveStep(${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="上移">↑</button>
-        <button class="mv" onclick="moveStep(${i},1)" ${i === list.length - 1 ? 'disabled' : ''} aria-label="下移">↓</button>
-        <button class="del" onclick="removeStep(${i})" aria-label="删除">✕</button>
+  return list.map((s, i) => `<div class="step-edit" data-idx="${i}">
+      <div class="step-main">
+        <input class="name" value="${escapeHtml(s.name)}" placeholder="步骤名">
+        <input class="meta" value="${escapeHtml(s.note || '')}" placeholder="说明（可选）">
+        <div class="step-btns">
+          <button class="mv" onclick="moveStep(${i},-1)" ${i === 0 ? 'disabled' : ''} aria-label="上移">↑</button>
+          <button class="mv" onclick="moveStep(${i},1)" ${i === list.length - 1 ? 'disabled' : ''} aria-label="下移">↓</button>
+          <button class="del" onclick="removeStep(${i})" aria-label="删除">✕</button>
+        </div>
+      </div>
+      <div class="step-extra">
+        <label class="ex">⏱ <input class="sec" type="number" min="0" step="5" inputmode="numeric" value="${s.timer || ''}" placeholder="秒"></label>
+        <label class="ex">🏷 <select class="tag">
+          ${TAG_OPTIONS.map(t => `<option value="${t.value}"${(s.tag || '') === t.value ? ' selected' : ''}>${t.label}</option>`).join('')}
+        </select></label>
       </div>
     </div>`).join('');
 }
@@ -1856,8 +1948,11 @@ function collectSteps() {
       name: r.querySelector('.name').value.trim(),
       note: r.querySelector('.meta').value.trim()
     };
-    if (r.dataset.tag) { item.tag = r.dataset.tag; item.tagText = r.dataset.tagtext; }
-    if (r.dataset.timer) { item.timer = parseInt(r.dataset.timer, 10); item.timerLabel = r.dataset.timerlabel; }
+    const secEl = r.querySelector('.sec');
+    const sec = secEl ? parseInt(secEl.value, 10) : 0;
+    if (sec > 0) { item.timer = sec; item.timerLabel = timerLabelOf(sec); }
+    const tagEl = r.querySelector('.tag');
+    if (tagEl && tagEl.value) { item.tag = tagEl.value; item.tagText = TAG_LABEL[tagEl.value] || tagEl.value; }
     return item;
   }).filter(x => x.name);
 }
@@ -2078,7 +2173,9 @@ function finishGuide() {
 function skinSummaryHtml() {
   const data = getSkin(selectedDate);
   const score = data ? (data.score || 0) : 0;
-  let html = '<div class="skin-card"><div class="skin-head"><span>🫧 今天皮肤怎么样</span><span style="font-size:11px;color:#666;">可跳过</span></div>';
+  const isToday = selectedDate === todayStr();
+  const title = isToday ? '今天皮肤怎么样' : formatDateCN(selectedDate) + ' 的皮肤';
+  let html = '<div class="skin-card"><div class="skin-head"><span>🫧 ' + title + '</span><span style="font-size:11px;color:#666;">可跳过</span></div>';
   html += '<div class="skin-score">';
   for (let i = 1; i <= 5; i++) {
     html += `<button class="skin-dot${score === i ? ' on' : ''}" onclick="openSkinSheet(${i})">${i}</button>`;
@@ -2096,8 +2193,22 @@ function skinSummaryHtml() {
 }
 
 let skinDraft = null;
+let skinEditDate = null;
+
+// 给指定日期补记（历史记录页用）
+function editSkinFor(dateKey) {
+  skinEditDate = dateKey;
+  const existing = getSkin(dateKey) || { score: 0, tags: [], note: '' };
+  skinDraft = {
+    score: existing.score || 0,
+    tags: (existing.tags || []).slice(),
+    note: existing.note || ''
+  };
+  drawSkinSheet();
+}
 
 function openSkinSheet(preScore) {
+  skinEditDate = selectedDate;
   const existing = getSkin(selectedDate) || { score: 0, tags: [], note: '' };
   skinDraft = {
     score: preScore || existing.score || 0,
@@ -2139,10 +2250,14 @@ function draftTag(t) {
 }
 function saveSkinSheet() {
   syncSkinNote();
-  setSkin(selectedDate, skinDraft);
+  setSkin(skinEditDate || selectedDate, skinDraft);
   closeSheet();
   showToast('已记录皮肤状态');
   if (activeTab === 'routine') renderRoutine();
+  else if (activeTab === 'records') {
+    if (viewingRecordDate) renderRecordDetail(viewingRecordDate);
+    else renderRecords();
+  }
 }
 
 /* ================= 趋势 & 打卡图 ================= */
@@ -2156,6 +2271,51 @@ function lastNDays(n) {
     out.push(dateStr(d));
   }
   return out;
+}
+
+function statBox(label, value) {
+  return `<div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;color:#c8e6c9;">${value}</div><div style="font-size:11px;color:#666;margin-top:2px;">${label}</div></div>`;
+}
+
+// 本周（周一起算）的执行总结
+function weeklySummaryHtml() {
+  const ws = getMonday(new Date());
+  const today = todayStr();
+  let done = 0, total = 0, retinol = 0, bha = 0, mask = 0;
+  const miss = {};
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(ws.getTime());
+    d.setDate(ws.getDate() + i);
+    const key = dateStr(d);
+    if (key > today) break;
+    const p = dayProgress(key);
+    done += p.done; total += p.total;
+    const data = readDay(key);
+    itemsOf(key).forEach(({ id, item }) => {
+      if (data[id]) {
+        if (item.tag === 'retinol') retinol++;
+        else if (item.tag === 'bha') bha++;
+        else if (item.tag === 'mask') mask++;
+      } else if (item.name !== '等待吸收') {
+        miss[item.name] = (miss[item.name] || 0) + 1;
+      }
+    });
+  }
+  const pct = total ? Math.round(done / total * 100) : 0;
+  const topMiss = Object.keys(miss).sort((a, b) => miss[b] - miss[a])[0];
+  let html = '<div class="set-group" style="padding:14px;margin:12px 16px 0;">';
+  html += '<div class="skin-head"><span>📅 本周总结</span><span style="font-size:11px;color:#666;">周一起算</span></div>';
+  html += '<div style="display:flex;gap:8px;text-align:center;margin:12px 0 10px;">';
+  html += statBox('完成率', pct + '%');
+  html += statBox('A醇', retinol + '次');
+  html += statBox('刷酸', bha + '次');
+  html += statBox('泥膜', mask + '次');
+  html += '</div>';
+  html += topMiss
+    ? `<div class="sub">最常漏掉：${escapeHtml(topMiss)}（${miss[topMiss]} 次）</div>`
+    : '<div class="sub">这周一步没漏，厉害 👍</div>';
+  html += '</div>';
+  return html;
 }
 
 function trendBlockHtml() {
