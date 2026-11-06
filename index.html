@@ -625,6 +625,7 @@ let activeTab = 'routine';
 let activeTimers = {};
 let viewingRecordDate = null;
 let lastDayKey = todayStr();
+const APP_VERSION = 'v11';
 const APP_KEY_RE = /^(\d{4}-\d{2}-\d{2}(_timer|_steps)?|restock_data|skincare_notes|skincare_skin|skincare_routine|skincare_reminder|skincare_theme)$/;
 
 /* ====== 日期工具 ====== */
@@ -1891,8 +1892,32 @@ function renderSettings() {
     </div>
   </details>`;
 
+  // 版本与更新
+  html += `<div style="text-align:center;padding:18px 0 6px;font-size:11px;color:#555;">
+    护肤打卡 ${APP_VERSION}
+    <button class="set-btn" style="margin-left:10px;padding:4px 12px;font-size:11px;" onclick="forceUpdate()">强制更新</button>
+  </div>`;
+
   html += '</div>';
   content.innerHTML = html;
+}
+
+// 注销 Service Worker 并重新加载，解决"改了代码但页面不更新"
+function forceUpdate() {
+  showToast('正在更新…');
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      return Promise.all(regs.map(r => r.unregister()));
+    }).then(() => {
+      if ('caches' in window) {
+        return caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+      }
+    }).then(() => {
+      location.reload();
+    }).catch(() => location.reload());
+  } else {
+    location.reload();
+  }
 }
 
 function groupTabsHTML() {
