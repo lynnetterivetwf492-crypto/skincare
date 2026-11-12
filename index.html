@@ -570,10 +570,10 @@ body.light .note-peek.empty { color: #8a9199; }
 const dayNames = ['周日','周一','周二','周三','周四','周五','周六'];
 const dayShort = ['日','一','二','三','四','五','六'];
 const dayTypes = {
-  0: { text: '修复日', class: 'rest' },
+  0: { text: '维A酸日', class: 'active' },
   1: { text: 'A醇日', class: 'active' },
   2: { text: '水杨酸日', class: 'exfol' },
-  3: { text: '修复日', class: 'rest' },
+  3: { text: '维A酸日', class: 'active' },
   4: { text: 'A醇日', class: 'active' },
   5: { text: '清洁日', class: 'mild' },
   6: { text: 'A醇日', class: 'active' }
@@ -590,12 +590,11 @@ const routines = {
     0: [
       { name: '洁面', note: '洗面奶' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: '维A酸乳膏', note: '只点涂下巴凸起处，薄薄一层，别全脸涂' },
       { name: 'B5修复霜', note: '薄涂一层' }
     ],
     1:     [
       { name: '洁面', note: '洗面奶' },
-      { name: '阿达帕林', note: '薄涂下巴，只涂下巴', tag: 'adapalene', tagText: '下巴' },
-      { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
       { name: '蓝管A醇', note: '全脸涂，避开下巴和眼周', tag: 'retinol', tagText: 'A醇' },
       { name: 'B5修复霜', note: '薄涂一层' }
@@ -609,12 +608,11 @@ const routines = {
     3: [
       { name: '洁面', note: '洗面奶' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
+      { name: '维A酸乳膏', note: '只点涂下巴凸起处，薄薄一层，别全脸涂' },
       { name: 'B5修复霜', note: '薄涂一层' }
     ],
     4:     [
       { name: '洁面', note: '洗面奶' },
-      { name: '阿达帕林', note: '薄涂下巴，只涂下巴', tag: 'adapalene', tagText: '下巴' },
-      { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
       { name: '蓝管A醇', note: '全脸涂，避开下巴和眼周', tag: 'retinol', tagText: 'A醇' },
       { name: 'B5修复霜', note: '薄涂一层' }
@@ -628,8 +626,6 @@ const routines = {
     ],
     6:     [
       { name: '洁面', note: '洗面奶' },
-      { name: '阿达帕林', note: '薄涂下巴，只涂下巴', tag: 'adapalene', tagText: '下巴' },
-      { name: '等待吸收', note: '阿达帕林吸收后再涂下一步', timer: 90, timerLabel: '90s' },
       { name: 'OLAY小白瓶', note: '烟酰胺精华，等吸收后再涂下一步', timer: 45, timerLabel: '45s', tag: 'bright', tagText: '美白' },
       { name: '蓝管A醇', note: '全脸涂，避开下巴和眼周', tag: 'retinol', tagText: 'A醇' },
       { name: 'B5修复霜', note: '薄涂一层' }
@@ -644,7 +640,7 @@ let activeTab = 'routine';
 let activeTimers = {};
 let viewingRecordDate = null;
 let lastDayKey = todayStr();
-const APP_VERSION = 'v14';
+const APP_VERSION = 'v15';
 const APP_KEY_RE = /^(\d{4}-\d{2}-\d{2}(_timer|_steps)?|restock_data|skincare_notes|skincare_skin|skincare_routine|skincare_reminder|skincare_theme)$/;
 
 /* ====== 日期工具 ====== */
@@ -745,8 +741,8 @@ const STEP_TO_PRODUCT = {
   'OLAY小白瓶': 'OLAY小白瓶',
   '蓝管A醇': '蓝管A醇',
   'B5修复霜': 'B5修复霜',
-  '阿达帕林': '阿达帕林',
   '水杨酸棉片': 'Stridex棉片',
+  '维A酸乳膏': '维A酸乳膏',
   '泥膜敷T区': '红之植酸泥膜'
 };
 
@@ -758,8 +754,8 @@ const DEFAULT_RESTOCK = [
   { name: 'OLAY小白瓶', status: 'ok', usageCount: 0, usageHistory: [] },
   { name: '蓝管A醇', status: 'ok', usageCount: 0, usageHistory: [] },
   { name: 'B5修复霜', status: 'ok', usageCount: 0, usageHistory: [] },
-  { name: '阿达帕林', status: 'ok', usageCount: 0, usageHistory: [] },
   { name: 'Stridex棉片', status: 'ok', usageCount: 0, usageHistory: [] },
+  { name: '维A酸乳膏', status: 'ok', usageCount: 0, usageHistory: [] },
   { name: '红之植酸泥膜', status: 'ok', usageCount: 0, usageHistory: [] }
 ];
 
@@ -784,7 +780,7 @@ function getRestockData() {
       return obj;
     }).filter(item => {
       // 色修已从流程中移除，清掉历史残留条目
-      if (item.name === '修丽可色修') { needSave = true; return false; }
+      if (item.name === '修丽可色修' || item.name === '阿达帕林') { needSave = true; return false; }
       return true;
     });
     if (needSave) localStorage.setItem('restock_data', JSON.stringify(migrated));
